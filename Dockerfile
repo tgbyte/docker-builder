@@ -10,4 +10,5 @@ RUN set -x \
          curl \
          git \
          jq \
-         openssh-client
+         openssh-client \
+         qemu-arm

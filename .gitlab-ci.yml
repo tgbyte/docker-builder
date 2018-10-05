@@ -20,7 +20,7 @@ build-image-amd64:
 build-image-arm:
   <<: *build-image
   variables:
-    ARCH: linux/arm
+    ARCH: arm
 
 build-manifest:
   stage: build-manifest

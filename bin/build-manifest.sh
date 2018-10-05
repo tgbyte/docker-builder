@@ -4,7 +4,7 @@ set -e
 
 source $(dirname $0)/../share/build-functions.sh
 
-if [ -n "$MULTIARCH" ]
+if [ -z "$MULTIARCH" ]
 then
   echo "Cannot use build-manifest.sh if MULTIARCH is not enabled."
   exit 1

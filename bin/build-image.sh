@@ -4,7 +4,7 @@ set -xe
 
 source $(dirname $0)/../share/build-functions.sh
 
-docker build --no-cache --pull -t "$FULL_IMAGE_ARCH" -f "$DOCKERFILE" "$BUILD_DIR"
+docker build --no-cache --pull --platform ${ARCH} -t "$FULL_IMAGE_ARCH" -f "$DOCKERFILE" "$BUILD_DIR"
 
 mkdir -p results
 docker push "$FULL_IMAGE_ARCH"

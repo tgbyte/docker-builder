@@ -1,7 +1,7 @@
 
 if [ -z "$IMAGE" ]
 then
-  IMAGE=${CI_PROJECT_PATH/\/docker/tgbyte/}
+  IMAGE=${CI_PROJECT_PATH/docker/tgbyte/}
 fi
 
 if [ -z "$TAG" ]

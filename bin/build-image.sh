@@ -1,6 +1,6 @@
 #!/bin/sh
 
-set -xe
+set -e
 
 source $(dirname $0)/../share/build-functions.sh
 

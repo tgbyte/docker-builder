@@ -3,6 +3,9 @@ stages:
   - build-image
   - build-manifest
 
+variables:
+  MULTIARCH: 1
+
 .build-image-template: &build-image
   stage: build-image
   script:

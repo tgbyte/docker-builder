@@ -4,8 +4,6 @@ set -xe
 
 source $(dirname $0)/../share/build-functions.sh
 
-docker info
-
 docker build --no-cache --pull --platform ${ARCH} -t "$FULL_IMAGE_ARCH" -f "$DOCKERFILE" "$BUILD_DIR"
 
 mkdir -p results

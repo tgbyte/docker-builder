@@ -1,4 +1,4 @@
-FROM ubuntu:18.04 as qemu
+FROM amd64/ubuntu:18.04 as qemu
 
 ENV DEBIAN_FRONTEND=noninteractive
 

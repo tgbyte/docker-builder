@@ -4,6 +4,12 @@ set -e
 
 source $(dirname $0)/../share/build-functions.sh
 
+if [ -n "$MULTIARCH" ]
+then
+  echo "Cannot use build-manifest.sh if MULTIARCH is not enabled."
+  exit 1
+fi
+
 cd results
 docker manifest create "$FULL_IMAGE" $(cat *)
 

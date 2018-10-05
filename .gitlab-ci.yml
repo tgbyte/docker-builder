@@ -1,3 +1,30 @@
-build:
-  stage: build
-  script: ./build.sh
+image: docker
+stages:
+  - build-image
+  - build-manifest
+
+.build-image-template: &build-image
+  stage: build-image
+  script:
+    - ./bin/build-image.sh
+  artifacts:
+    expire_in: 1 day
+    paths:
+      - results/
+  only:
+    - master
+
+build-image-amd64:
+  <<: *build-image
+
+build-image-arm:
+  <<: *build-image
+  variables:
+    ARCH: linux/arm
+
+build-manifest:
+  stage: build-manifest
+  script:
+    - ./bin/build-manifest.sh
+  only:
+    - master

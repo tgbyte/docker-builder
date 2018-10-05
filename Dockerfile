@@ -10,5 +10,7 @@ RUN set -x \
          curl \
          git \
          jq \
-         openssh-client \
-         qemu-arm
+         openssh-client
+
+COPY bin/* /usr/local/bin/
+COPY share/* /usr/local/share/

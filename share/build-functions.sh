@@ -21,6 +21,11 @@ then
   ARCH=$(docker version | grep OS/Arch | head -1 | sed s,.\*/,,)
 fi
 
+if [ -z "$PLATFORM" ]
+then
+  PLATFORM=${ARCH}
+fi
+
 if [ -z "$BUILD_DIR" ]
 then
   BUILD_DIR="."

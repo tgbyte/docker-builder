@@ -11,7 +11,7 @@ else
   IMAGE_NAME=${FULL_IMAGE_ARCH}
 fi
 
-docker build --no-cache --pull --platform ${ARCH} -t "$IMAGE_NAME" -f "$DOCKERFILE" "$BUILD_DIR"
+docker build --no-cache --pull --platform ${PLATFORM} -t "$IMAGE_NAME" -f "$DOCKERFILE" "$BUILD_DIR"
 
 mkdir -p results
 docker push "$IMAGE_NAME"

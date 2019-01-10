@@ -21,6 +21,7 @@ RUN set -x \
          git \
          jq \
          maven \
+         openjdk8 \
          openssh-client
 
 COPY bin/* /usr/local/bin/

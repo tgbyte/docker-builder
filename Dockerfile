@@ -20,6 +20,7 @@ RUN set -x \
          curl \
          git \
          jq \
+         maven \
          openssh-client
 
 COPY bin/* /usr/local/bin/

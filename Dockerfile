@@ -19,10 +19,12 @@ RUN set -x \
          coreutils \
          curl \
          git \
+         grep \
          jq \
          maven \
          openjdk8 \
-         openssh-client
+         openssh-client \
+         sed
 
 COPY bin/* /usr/local/bin/
 COPY share/* /usr/local/share/

@@ -41,8 +41,8 @@ FULL_IMAGE="$IMAGE":"$TAG"
 
 declare -a BUILD_ARGS
 while IFS='=' read -r -d '' n v; do
-    l="$(echo "$n" | tr 'A-Z_' 'a-z.')"
-    BUILD_ARGS+=("--build-arg \"$l=$v\"")
+    BUILD_ARGS+=("--build-arg")
+    BUILD_ARGS+=("\"$n=$v\"")
 done < <(env -0 | grep -z '^ARG_' | sed -rze 's/^ARG_//')
 
 

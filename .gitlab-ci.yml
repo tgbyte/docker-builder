@@ -9,7 +9,7 @@ variables:
 .build-image-template: &build-image
   stage: build-image
   script:
-    - ./bin/build-image.sh
+    - bin/build-image.sh
   artifacts:
     expire_in: 1 day
     paths:
@@ -28,6 +28,6 @@ build-image-arm:
 build-manifest:
   stage: build-manifest
   script:
-    - ./bin/build-manifest.sh
+    - bin/build-manifest.sh
   only:
     - master

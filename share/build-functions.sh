@@ -39,9 +39,17 @@ fi
 FULL_IMAGE_ARCH="$IMAGE":"$TAG"-"$ARCH"
 FULL_IMAGE="$IMAGE":"$TAG"
 
+declare -a BUILD_ARGS
+while IFS='=' read -r -d '' n v; do
+    l="$(echo "$n" | tr 'A-Z_' 'a-z.')"
+    BUILD_ARGS+=("--build-arg \"$l=$v\"")
+done < <(env -0 | grep -z '^ARG_' | sed -rze 's/^ARG_//')
+
+
 echo IMAGE: $IMAGE
 echo TAG: $TAG
 echo ARCH: $ARCH
 echo BUILD_DIR: $BUILD_DIR
 echo DOCKERFILE: $DOCKERFILE
 echo MULTIARCH: $MULTIARCH
+echo BUILD_ARGS: $BUILD_ARGS

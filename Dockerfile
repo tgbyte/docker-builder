@@ -20,6 +20,7 @@ RUN set -x \
          curl \
          git \
          grep \
+         httpie \
          jq \
          maven \
          openjdk8 \

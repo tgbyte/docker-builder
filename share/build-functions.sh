@@ -1,16 +1,13 @@
 
-if [ -z "$IMAGE" ]
-then
-  if [ -n "$CI_REGISTRY_IMAGE" ]
-  then
+if [ -z "$IMAGE" ]; then
+  if [ -n "$CI_REGISTRY_IMAGE" ]; then
     IMAGE=${CI_REGISTRY_IMAGE}
   else
     IMAGE=${CI_PROJECT_PATH/docker/tgbyte}
   fi
 fi
 
-if [ -z "$TAG" ]
-then
+if [ -z "$TAG" ]; then
   case ${CI_BUILD_REF_NAME} in
   master)
     TAG="latest"
@@ -21,23 +18,19 @@ then
   esac
 fi
 
-if [ -z "$ARCH" ]
-then
+if [ -z "$ARCH" ]; then
   ARCH=$(docker version | grep OS/Arch | head -1 | sed s,.\*/,,)
 fi
 
-if [ -z "$PLATFORM" ]
-then
+if [ -z "$PLATFORM" ]; then
   PLATFORM=${ARCH}
 fi
 
-if [ -z "$BUILD_DIR" ]
-then
+if [ -z "$BUILD_DIR" ]; then
   BUILD_DIR="."
 fi
 
-if [ -z "$BUILD_DIR" ]
-then
+if [ -z "$BUILD_DIR" ]; then
   DOCKERFILE="${BUILD_DIR}/Dockerfile"
 fi
 

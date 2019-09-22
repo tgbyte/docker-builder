@@ -1,7 +1,12 @@
 
 if [ -z "$IMAGE" ]
 then
-  IMAGE=${CI_PROJECT_PATH/docker/tgbyte}
+  if [ -z "$CI_REGISTRY_IMAGE" ]
+  then
+    IMAGE=${CI_REGISTRY_IMAGE}
+  else
+    IMAGE=${CI_PROJECT_PATH/docker/tgbyte}
+  fi
 fi
 
 if [ -z "$TAG" ]
@@ -44,7 +49,6 @@ while IFS='=' read -r -d '' n v; do
     BUILD_ARGS+=("--build-arg")
     BUILD_ARGS+=("$n=$v")
 done < <(env -0 | grep -z '^ARG_' | sed -rze 's/^ARG_//')
-
 
 echo IMAGE: $IMAGE
 echo TAG: $TAG

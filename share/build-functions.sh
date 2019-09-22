@@ -1,5 +1,5 @@
 function gitlab_login {
-  if [ -n "$CI_REGISTRY" ]; then
+  if [ -n "$CI_REGISTRY_IMAGE" ]; then
     if [ -n "$CI_REGISTRY_USER" ]; then
       echo "Detected GitLab Container registry - logging in using CI_REGISTRY_USER..."
       docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY

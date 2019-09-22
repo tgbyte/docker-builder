@@ -1,7 +1,7 @@
 
 if [ -z "$IMAGE" ]
 then
-  if [ -z "$CI_REGISTRY_IMAGE" ]
+  if [ -n "$CI_REGISTRY_IMAGE" ]
   then
     IMAGE=${CI_REGISTRY_IMAGE}
   else

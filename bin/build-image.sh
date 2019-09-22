@@ -16,20 +16,7 @@ set +x
 
 mkdir -p results
 
-if [ -n "$CI_REGISTRY" ]; then
-  if [ -n "$CI_REGISTRY_USER" ]; then
-    docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-  else
-    if [ -n "$CI_DEPLOY_USER" ]; then
-      docker login -u $CI_DEPLOY_USER -p $CI_DEPLOY_PASSWORD $CI_REGISTRY
-    else
-      echo "No credentials defined to login to GitLab Container Registry. See https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#authenticating-to-the-container-registry for options."
-      exit 1
-    fi
-  fi
-fi
-
-
+gitlab_login
 docker push "$IMAGE_NAME"
 
 if [ -n "$MULTIARCH" ]; then

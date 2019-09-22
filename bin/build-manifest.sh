@@ -9,6 +9,8 @@ if [ -z "$MULTIARCH" ]; then
   exit 1
 fi
 
+gitlab_login
+
 cd results
 docker manifest create "$FULL_IMAGE" $(cat *)
 

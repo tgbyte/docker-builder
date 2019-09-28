@@ -22,6 +22,7 @@ RUN set -x \
          grep \
          httpie \
          jq \
+         make \
          maven \
          openjdk8 \
          openssh-client \

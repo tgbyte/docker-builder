@@ -26,7 +26,8 @@ RUN set -x \
          maven \
          openjdk8 \
          openssh-client \
-         sed
+         sed \
+         skopeo
 
 COPY bin/* /usr/local/bin/
 COPY share/* /usr/local/share/

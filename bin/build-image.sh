@@ -21,5 +21,6 @@ docker push "$IMAGE_NAME"
 
 if [ -n "$MULTIARCH" ]; then
   FULL_IMAGE_ARCH_SHA=$(docker inspect --format='{{ index .RepoDigests 0 }}' "$IMAGE_NAME")
+  mkdir -p "${BUILD_DIR}/results"
   echo "$FULL_IMAGE_ARCH_SHA" > "${BUILD_DIR}/results/${ARCH}"
 fi

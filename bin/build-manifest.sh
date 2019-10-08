@@ -11,7 +11,7 @@ fi
 
 gitlab_login
 
-cd results
+cd "${BUILD_DIR}/results"
 docker manifest create "$FULL_IMAGE" $(cat *)
 
 for i in *; do

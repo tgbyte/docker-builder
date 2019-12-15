@@ -10,13 +10,14 @@ else
   IMAGE_NAME=${FULL_IMAGE_ARCH}
 fi
 
+gitlab_login
+
 set -x
 docker build --no-cache --pull --platform ${PLATFORM} -t "$IMAGE_NAME" -f "$DOCKERFILE" "${BUILD_ARGS[@]}" "$BUILD_DIR"
 set +x
 
 mkdir -p results
 
-gitlab_login
 docker push "$IMAGE_NAME"
 
 if [ -n "$MULTIARCH" ]; then

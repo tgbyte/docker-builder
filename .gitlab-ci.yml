@@ -14,8 +14,8 @@ variables:
     expire_in: 1 day
     paths:
       - results/
-  only:
-    - master
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 build-image-amd64:
   <<: *build-image
@@ -29,5 +29,5 @@ build-manifest:
   stage: build-manifest
   script:
     - ./bin/build-manifest.sh
-  only:
-    - master
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH

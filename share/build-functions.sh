@@ -25,7 +25,7 @@ fi
 
 if [ -z "$TAG" ]; then
   case ${CI_BUILD_REF_NAME} in
-  master)
+  master|main)
     TAG="latest"
     ;;
   *)

@@ -1,4 +1,4 @@
-FROM amd64/ubuntu:18.04 as qemu
+FROM amd64/ubuntu:20.04 as qemu
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -11,6 +11,7 @@ ARG DOCKER_VERSION
 FROM docker:${DOCKER_VERSION:-latest}
 
 COPY --from=qemu /usr/bin/qemu-arm-static /usr/bin
+COPY --from=qemu /usr/bin/qemu-aarch64-static /usr/bin
 
 ENV LANG C.UTF-8
 RUN set -x \
@@ -19,15 +20,25 @@ RUN set -x \
          coreutils \
          curl \
          git \
+         go \
          grep \
          httpie \
          jq \
          make \
-         maven \
-         openjdk8 \
+         musl-dev \
          openssh-client \
          sed \
-         skopeo
+         skopeo \
+    && git clone https://github.com/containerd/imgcrypt \
+    && cd imgcrypt \
+    && make \
+    && make install \
+    && cd - \
+    && rm -rf imgcrypt \
+    && apk del --no-cache \
+      go \
+      musl-dev
 
 COPY bin/* /usr/local/bin/
 COPY share/* /usr/local/share/
+COPY etc/* /usr/local/etc/

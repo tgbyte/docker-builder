@@ -19,6 +19,7 @@ RUN set -x \
          bash \
          coreutils \
          curl \
+         gcc \
          git \
          go \
          grep \
@@ -36,6 +37,7 @@ RUN set -x \
     && cd - \
     && rm -rf imgcrypt \
     && apk del --no-cache \
+      gcc \
       go \
       musl-dev
 

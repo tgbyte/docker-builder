@@ -19,28 +19,14 @@ RUN set -x \
          bash \
          coreutils \
          curl \
-         gcc \
          git \
-         go \
          grep \
          httpie \
          jq \
          make \
-         musl-dev \
          openssh-client \
          sed \
-         skopeo \
-    && git clone https://github.com/containerd/imgcrypt \
-    && cd imgcrypt \
-    && make \
-    && make install \
-    && cd - \
-    && rm -rf imgcrypt \
-    && apk del --no-cache \
-      gcc \
-      go \
-      musl-dev
+         skopeo
 
 COPY bin/* /usr/local/bin/
 COPY share/* /usr/local/share/
-COPY etc/* /usr/local/etc/

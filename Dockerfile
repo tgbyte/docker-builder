@@ -26,7 +26,9 @@ RUN set -x \
          make \
          openssh-client \
          sed \
-         skopeo
+         skopeo \
+    && apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/testing \
+         pup
 
 COPY bin/* /usr/local/bin/
 COPY share/* /usr/local/share/

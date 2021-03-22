@@ -28,7 +28,8 @@ RUN set -x \
          sed \
          skopeo \
     && apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/testing \
-         pup
+         pup \
+         trivy
 
 COPY bin/* /usr/local/bin/
 COPY share/* /usr/local/share/

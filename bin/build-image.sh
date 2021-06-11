@@ -12,6 +12,10 @@ fi
 
 gitlab_login
 
+if [ -n "$MULTIARCH" ] && [ -n "$ARCH" ]; then
+  docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+fi
+
 set -x
 docker build --no-cache --pull --platform ${PLATFORM} -t "$IMAGE_NAME" -f "$DOCKERFILE" "${BUILD_ARGS[@]}" "$BUILD_DIR"
 set +x

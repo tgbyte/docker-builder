@@ -19,7 +19,7 @@ build-image-amd64:
 build-image-arm64:
   <<: *build-image
   rules:
-    - if: $MULTIARCH == 1
+    - if: $MULTIARCH == "1"
   variables:
     ARCH: arm64
 
@@ -28,4 +28,4 @@ build-manifest:
   script:
     - build-manifest.sh
   rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $MULTIARCH == 1
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $MULTIARCH == "1"

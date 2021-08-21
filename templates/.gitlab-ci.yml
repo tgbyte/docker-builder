@@ -5,7 +5,7 @@ stages:
 .build-image-template: &build-image
   stage: build-image
   script:
-    - build-image.sh
+    - ${BUILD_IMAGE_SCRIPT:-build-image.sh}
   artifacts:
     expire_in: 1 day
     paths:
@@ -26,6 +26,6 @@ build-image-arm64:
 build-manifest:
   stage: build-manifest
   script:
-    - build-manifest.sh
+    - ${BUILD_MANIFEST_SCRIPT:-build-manifest.sh}
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $MULTIARCH == "1"

@@ -20,11 +20,6 @@ variables:
 build-image-amd64:
   <<: *build-image
 
-build-image-arm:
-  <<: *build-image
-  variables:
-    ARCH: arm
-
 build-image-arm64:
   <<: *build-image
   variables:

@@ -1,6 +1,4 @@
-#!/bin/bash
-
-set -e
+#!/bin/bash -e
 
 source $(dirname $0)/../share/build-functions.sh
 
@@ -13,7 +11,9 @@ fi
 gitlab_login
 
 if [ -n "$MULTIARCH" ] && [ -n "$ARCH" ]; then
-  docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+  set +e
+  docker run --privileged --rm tonistiigi/binfmt --install "$ARCH"
+  set -e
 fi
 
 set -x

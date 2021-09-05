@@ -23,7 +23,7 @@ fi
 
 gitlab_login
 
-if [ -n "$MULTIARCH" ] && [ -n "$ARCH" ]; then
+if [ -n "$MULTIARCH" ] && [ "$ARCH" != "" ]; then
   set +e
   docker run --privileged --rm tonistiigi/binfmt --install "$ARCH"
   set -e

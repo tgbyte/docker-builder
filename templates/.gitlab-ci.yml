@@ -15,7 +15,7 @@ trivy:
       - .trivy-vulnerable
     when: always
   rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && CI_PIPELINE_SOURCE != "push"
 
 .build-image-template: &build-image
   stage: build-image
@@ -27,7 +27,7 @@ trivy:
       - results/
   needs:
     - job: trivy
-      artifacts: true
+      optional: true
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
@@ -47,10 +47,8 @@ build-manifest:
     - ${BUILD_MANIFEST_SCRIPT:-build-manifest.sh}
   needs:
     - job: trivy
-      artifacts: true
+      optional: true
     - job: build-image-amd64
-      artifacts: true
     - job: build-image-arm64
-      artifacts: true
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $MULTIARCH == "1"

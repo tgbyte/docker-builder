@@ -15,7 +15,7 @@ trivy:
       - .trivy-vulnerable
     when: always
   rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && CI_PIPELINE_SOURCE != "push"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "push"
 
 .build-image-template: &build-image
   stage: build-image

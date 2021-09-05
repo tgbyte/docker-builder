@@ -7,7 +7,6 @@ gitlab_login
 trivy \
   --cache-dir .trivy \
   image \
-  --severity HIGH,CRITICAL \
   --ignore-unfixed \
   --exit-code 2 \
   --no-progress \

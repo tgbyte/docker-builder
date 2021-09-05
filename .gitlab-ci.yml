@@ -1,10 +1,15 @@
 image: tgbyte/builder
+
 stages:
   - build-image
   - build-manifest
 
 variables:
   MULTIARCH: 1
+
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 .build-image-template: &build-image
   stage: build-image
@@ -14,8 +19,6 @@ variables:
     expire_in: 1 day
     paths:
       - results/
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 build-image-amd64:
   <<: *build-image
@@ -27,7 +30,8 @@ build-image-arm64:
 
 build-manifest:
   stage: build-manifest
+  needs:
+    - job: build-image-amd64
+    - job: build-image-arm64
   script:
     - ./bin/build-manifest.sh
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH

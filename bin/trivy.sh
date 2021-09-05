@@ -9,6 +9,7 @@ echo "Scanning ${FULL_IMAGE} for vulnerabilities..."
 trivy \
   --cache-dir .trivy \
   image \
+  --severity "${TRIVY_SEVERITY:-HIGH,CRITICAL,MEDIUM}" \
   --ignore-unfixed \
   --exit-code 2 \
   --no-progress \

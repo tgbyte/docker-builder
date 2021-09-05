@@ -9,3 +9,4 @@ variables:
   BUILD_MANIFEST_SCRIPT: bin/build-manifest.sh
   MULTIARCH: 1
   TRIVY_SCRIPT: bin/trivy.sh
+  TRIVY_SEVERITY: HIGH,CRITICAL

@@ -1,6 +1,27 @@
 stages:
+  - scan
   - build-image
   - build-manifest
+
+trivy:
+  stage: scan
+  image:
+    name: aquasec/trivy
+    entrypoint: [""]
+  script:
+    - ${TRIVY_SCRIPT:-trivy.sh}
+  allow_failure: true
+  artifacts:
+    expire_in: 1 day
+    paths:
+      - .trivy
+      - .trivy-vulnerable
+    when: always
+  needs:
+    - job: version
+      artifacts: true
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 .build-image-template: &build-image
   stage: build-image
@@ -10,6 +31,9 @@ stages:
     expire_in: 1 day
     paths:
       - results/
+  needs:
+    - job: trivy
+      artifacts: true
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
@@ -27,5 +51,12 @@ build-manifest:
   stage: build-manifest
   script:
     - ${BUILD_MANIFEST_SCRIPT:-build-manifest.sh}
+  needs:
+    - job: trivy
+      artifacts: true
+    - job: build-image-amd64
+      artifacts: true
+    - job: build-image-arm64
+      artifacts: true
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $MULTIARCH == "1"

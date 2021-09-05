@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source $(dirname $0)/../share/build-functions.sh
+source "$(dirname "$0")/../share/build-functions.sh"
 
 gitlab_login
 

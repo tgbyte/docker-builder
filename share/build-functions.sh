@@ -1,12 +1,14 @@
-function gitlab_login {
+# shellcheck disable=SC2001,SC2034,SC2148
+
+gitlab_login() {
   if [ -n "$CI_REGISTRY_IMAGE" ]; then
     if [ -n "$CI_REGISTRY_USER" ]; then
       echo "Detected GitLab Container registry - logging in using CI_REGISTRY_USER..."
-      docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+      docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
     else
       if [ -n "$CI_DEPLOY_USER" ]; then
         echo "Detected GitLab Container registry - logging in using CI_DEPLOY_USER..."
-        docker login -u $CI_DEPLOY_USER -p $CI_DEPLOY_PASSWORD $CI_REGISTRY
+        docker login -u "$CI_DEPLOY_USER" -p "$CI_DEPLOY_PASSWORD" "$CI_REGISTRY"
       else
         echo "No credentials defined to login to GitLab Container Registry. See https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#authenticating-to-the-container-registry for options."
         exit 1
@@ -15,11 +17,15 @@ function gitlab_login {
   fi
 }
 
+if test -z "$(type -p)"; then
+  BASH="1"
+fi
+
 if [ -z "$IMAGE" ]; then
   if [ -n "$CI_REGISTRY_IMAGE" ]; then
     IMAGE=${CI_REGISTRY_IMAGE}
   else
-    IMAGE=${CI_PROJECT_PATH/docker/tgbyte}
+    IMAGE=$(echo "$CI_PROJECT_PATH" | sed 's/docker/tgbyte/g')
   fi
 fi
 
@@ -29,7 +35,7 @@ if [ -z "$TAG" ]; then
     TAG="latest"
     ;;
   *)
-    TAG=${CI_BUILD_REF_NAME//[^0-9A-Za-z_.\-]/-}
+    TAG=$(echo "$CI_BUILD_REF_NAME" | sed 's/[^0-9A-Za-z_.\-]/-/g')
     ;;
   esac
 fi
@@ -53,16 +59,20 @@ fi
 FULL_IMAGE_ARCH="$IMAGE":"$TAG"-"$ARCH"
 FULL_IMAGE="$IMAGE":"$TAG"
 
-declare -a BUILD_ARGS
-while IFS='=' read -r -d '' n v; do
-    BUILD_ARGS+=("--build-arg")
-    BUILD_ARGS+=("$n=$v")
-done < <(env -0 | grep -z '^ARG_' | sed -rze 's/^ARG_//')
+if [ -n "${BASH}" ]; then
+  declare -a BUILD_ARGS
+  while IFS='=' read -r -d '' n v; do
+      BUILD_ARGS+=("--build-arg")
+      BUILD_ARGS+=("$n=$v")
+  done < <(env -0 | grep -z '^ARG_' | sed -rze 's/^ARG_//')
+fi
 
-echo IMAGE: $IMAGE
-echo TAG: $TAG
-echo ARCH: $ARCH
-echo BUILD_DIR: $BUILD_DIR
-echo DOCKERFILE: $DOCKERFILE
-echo MULTIARCH: $MULTIARCH
-echo BUILD_ARGS: "${BUILD_ARGS[@]}"
+echo "IMAGE: $IMAGE"
+echo "TAG: $TAG"
+echo "ARCH: $ARCH"
+echo "BUILD_DIR: $BUILD_DIR"
+echo "DOCKERFILE: $DOCKERFILE"
+echo "MULTIARCH: $MULTIARCH"
+if [ -n "${BASH}" ]; then
+  echo BUILD_ARGS: "${BUILD_ARGS[@]}"
+fi

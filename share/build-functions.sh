@@ -1,4 +1,4 @@
-# shellcheck disable=SC2001,SC2034,SC2148
+#!/bin/bash
 
 gitlab_login() {
   if [ -n "$CI_REGISTRY_IMAGE" ]; then
@@ -17,15 +17,11 @@ gitlab_login() {
   fi
 }
 
-if test -z "$(type -p)"; then
-  BASH="1"
-fi
-
 if [ -z "$IMAGE" ]; then
   if [ -n "$CI_REGISTRY_IMAGE" ]; then
     IMAGE=${CI_REGISTRY_IMAGE}
   else
-    IMAGE=$(echo "$CI_PROJECT_PATH" | sed 's/docker/tgbyte/g')
+    IMAGE=${CI_PROJECT_PATH/docker/tgbyte}
   fi
 fi
 
@@ -35,7 +31,7 @@ if [ -z "$TAG" ]; then
     TAG="latest"
     ;;
   *)
-    TAG=$(echo "$CI_BUILD_REF_NAME" | sed 's/[^0-9A-Za-z_.\-]/-/g')
+    TAG=${CI_BUILD_REF_NAME//[^0-9A-Za-z_.\-]/-}
     ;;
   esac
 fi
@@ -56,16 +52,16 @@ if [ -z "$BUILD_DIR" ]; then
   DOCKERFILE="${BUILD_DIR}/Dockerfile"
 fi
 
+# shellcheck disable=SC2034
 FULL_IMAGE_ARCH="$IMAGE":"$TAG"-"$ARCH"
+# shellcheck disable=SC2034
 FULL_IMAGE="$IMAGE":"$TAG"
 
-if [ -n "${BASH}" ]; then
-  declare -a BUILD_ARGS
-  while IFS='=' read -r -d '' n v; do
-      BUILD_ARGS+=("--build-arg")
-      BUILD_ARGS+=("$n=$v")
-  done < <(env -0 | grep -z '^ARG_' | sed -rze 's/^ARG_//')
-fi
+declare -a BUILD_ARGS
+while IFS='=' read -r -d '' n v; do
+    BUILD_ARGS+=("--build-arg")
+    BUILD_ARGS+=("$n=$v")
+done < <(env -0 | grep -z '^ARG_' | sed -rze 's/^ARG_//')
 
 echo "IMAGE: $IMAGE"
 echo "TAG: $TAG"
@@ -73,6 +69,4 @@ echo "ARCH: $ARCH"
 echo "BUILD_DIR: $BUILD_DIR"
 echo "DOCKERFILE: $DOCKERFILE"
 echo "MULTIARCH: $MULTIARCH"
-if [ -n "${BASH}" ]; then
-  echo BUILD_ARGS: "${BUILD_ARGS[@]}"
-fi
+echo BUILD_ARGS: "${BUILD_ARGS[@]}"

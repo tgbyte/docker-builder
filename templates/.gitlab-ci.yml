@@ -17,9 +17,6 @@ trivy:
       - .trivy
       - .trivy-vulnerable
     when: always
-  needs:
-    - job: version
-      artifacts: true
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 

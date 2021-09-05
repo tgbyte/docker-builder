@@ -31,10 +31,10 @@ trivy:
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
-build-image-amd64:
+build-amd64:
   <<: *build-image
 
-build-image-arm64:
+build-arm64:
   <<: *build-image
   rules:
     - if: $MULTIARCH == "1"
@@ -48,7 +48,7 @@ build-manifest:
   needs:
     - job: trivy
       optional: true
-    - job: build-image-amd64
-    - job: build-image-arm64
+    - job: build-amd64
+    - job: build-arm64
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $MULTIARCH == "1"

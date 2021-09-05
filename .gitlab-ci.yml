@@ -1,37 +1,11 @@
 image: tgbyte/builder
 
-stages:
-  - build-image
-  - build-manifest
+include:
+  - project: 'docker/builder'
+    file: '/templates/.gitlab-ci.yml'
 
 variables:
+  BUILD_IMAGE_SCRIPT: bin/build-image.sh
+  BUILD_MANIFEST_SCRIPT: bin/build-manifest.sh
   MULTIARCH: 1
-
-workflow:
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-
-.build-image-template: &build-image
-  stage: build-image
-  script:
-    - ./bin/build-image.sh
-  artifacts:
-    expire_in: 1 day
-    paths:
-      - results/
-
-build-image-amd64:
-  <<: *build-image
-
-build-image-arm64:
-  <<: *build-image
-  variables:
-    ARCH: arm64
-
-build-manifest:
-  stage: build-manifest
-  needs:
-    - job: build-image-amd64
-    - job: build-image-arm64
-  script:
-    - ./bin/build-manifest.sh
+  TRIVY_SCRIPT: bin/trivy.sh

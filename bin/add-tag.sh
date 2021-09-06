@@ -1,8 +1,9 @@
 #!/bin/bash
 
-set -xe
+set -e
 
-source "$(dirname $0)/../share/build-functions.sh"
+# shellcheck disable=SC1091
+source "$(dirname "$0")/../share/build-functions.sh"
 
 gitlab_login
 

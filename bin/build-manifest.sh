@@ -1,8 +1,6 @@
-#!/bin/bash
-# shellcheck disable=SC2046
+#!/bin/bash -e
 
-set -e
-
+# shellcheck disable=SC1091
 source "$(dirname "$0")/../share/build-functions.sh"
 
 if [ -z "$MULTIARCH" ]; then
@@ -26,9 +24,11 @@ fi
 gitlab_login
 
 cd "${BUILD_DIR}/results"
+# shellcheck disable=SC2046
 docker manifest create "$FULL_IMAGE" $(cat *)
 
 for i in *; do
+  # shellcheck disable=SC2046
   docker manifest annotate "$FULL_IMAGE" $(cat "$i") --arch "$i"
 done
 

@@ -22,6 +22,7 @@ function gitlab_login {
 
 function exit_if_image_present {
   if [ "$FORCE" != "1" ] && [ -z "$VULNERABLE" ]; then
+    echo "Checking if ${FULL_IMAGE} already exists..."
     if ! check-tag.sh "${FULL_IMAGE}"; then
       echo "Docker image ${FULL_IMAGE} already exists - skipping build"
       exit 0

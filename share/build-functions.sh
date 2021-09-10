@@ -1,6 +1,6 @@
 #!/bin/bash
 
-gitlab_login() {
+function gitlab_login {
   if [ -n "$CI_REGISTRY_IMAGE" ]; then
     if [ -n "$CI_REGISTRY_USER" ]; then
       echo "Detected GitLab Container registry - logging in using CI_REGISTRY_USER..."
@@ -17,7 +17,7 @@ gitlab_login() {
   fi
 }
 
-exit_if_image_present() {
+function exit_if_image_present {
   if [ "$FORCE" != "1" ] && [ -z "$VULNERABLE" ]; then
     if ! check-tag.sh "${FULL_IMAGE}"; then
       echo "Docker image ${FULL_IMAGE} already exists - skipping build"

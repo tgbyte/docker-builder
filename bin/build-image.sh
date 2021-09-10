@@ -3,22 +3,18 @@
 # shellcheck disable=SC1091
 source "$(dirname "$0")/../share/build-functions.sh"
 
-if [ -z "$MULTIARCH" ]; then
+if [ -z "${MULTIARCH}" ]; then
   IMAGE_NAME=${FULL_IMAGE}
 else
   IMAGE_NAME=${FULL_IMAGE_ARCH}
 fi
 
 gitlab_login
+exit_if_image_present
 
-if [ "$FORCE" != "1" ] && [ -z "$VULNERABLE" ]; then
-  echo Exit if "${FULL_IMAGE}" already exists
-  check-tag.sh "${FULL_IMAGE}" && exit 0
-fi
-
-if [ -n "$MULTIARCH" ] && [ "$ARCH" != "" ] && [ "$ARCH" != "amd64" ]; then
+if [ -n "${MULTIARCH}" ] && [ "${ARCH}" != "" ] && [ "${ARCH}" != "amd64" ]; then
   set +e
-  docker run --privileged --rm tonistiigi/binfmt --install "$ARCH"
+  docker run --privileged --rm tonistiigi/binfmt --install "${ARCH}"
   set -e
 fi
 

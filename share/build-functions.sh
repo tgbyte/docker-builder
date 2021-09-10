@@ -17,6 +17,16 @@ gitlab_login() {
   fi
 }
 
+exit_if_image_present() {
+  if [ "$FORCE" != "1" ] && [ -z "$VULNERABLE" ]; then
+    echo Exit if "${FULL_IMAGE}" already exists
+    if ! check-tag.sh "${FULL_IMAGE}"; then
+      echo "Docker image ${FULL_IMAGE} already exists - skipping build"
+      exit 0
+    fi
+  fi
+}
+
 if [ -z "$IMAGE" ]; then
   if [ -n "$CI_REGISTRY_IMAGE" ]; then
     IMAGE=${CI_REGISTRY_IMAGE}

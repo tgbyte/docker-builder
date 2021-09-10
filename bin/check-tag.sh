@@ -6,5 +6,4 @@ source "$(dirname "$0")/../share/build-functions.sh"
 gitlab_login
 
 set +e
-
-skopeo inspect "docker://$1"
+skopeo inspect "docker://$1" > /dev/null 2>&1

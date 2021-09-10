@@ -17,6 +17,7 @@ trivy:
     paths:
       - .trivy-run
       - .trivy-vulnerable
+      - .version
     when: always
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "push"
@@ -29,6 +30,7 @@ trivy:
     expire_in: 1 day
     paths:
       - results/
+      - .version
   needs:
     - job: trivy
       optional: true

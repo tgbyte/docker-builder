@@ -42,15 +42,26 @@ if [ -z "$IMAGE" ]; then
   fi
 fi
 
+if [ -e .version ]; then
+  VERSION=$(cat .version)
+elif [ -e .gitlab-ci/version.sh ]; then
+  VERSION=$(.gitlab-ci/version.sh)
+  echo "${VERSION}" > .version
+fi
+
 if [ -z "$TAG" ]; then
-  case ${CI_BUILD_REF_NAME} in
-  master|main)
-    TAG="latest"
-    ;;
-  *)
-    TAG=${CI_BUILD_REF_NAME//[^0-9A-Za-z_.\-]/-}
-    ;;
-  esac
+  if [ -n "$VERSION" ]; then
+    TAG="$VERSION"
+  else
+    case ${CI_BUILD_REF_NAME} in
+    master|main)
+      TAG="latest"
+      ;;
+    *)
+      TAG=${CI_BUILD_REF_NAME//[^0-9A-Za-z_.\-]/-}
+      ;;
+    esac
+  fi
 fi
 
 if [ -z "$ARCH" ]; then
@@ -96,11 +107,12 @@ if [ -z "${QUIET}" ]; then
   echo "IMAGE: $IMAGE"
   echo "TAG: $TAG"
   echo "ARCH: $ARCH"
+  echo BUILD_ARGS: "${BUILD_ARGS[@]}"
   echo "BUILD_DIR: $BUILD_DIR"
   echo "DOCKERFILE: $DOCKERFILE"
-  echo "MULTIARCH: $MULTIARCH"
-  echo BUILD_ARGS: "${BUILD_ARGS[@]}"
   echo "FORCE: $FORCE"
+  echo "MULTIARCH: $MULTIARCH"
+  echo "VERSION: $VERSION"
   echo "VULNERABLE: $VULNERABLE"
   echo "============================"
 fi

@@ -1,5 +1,6 @@
 #!/bin/bash -e
 
+# shellcheck disable=SC2034
 QUIET=1
 # shellcheck disable=SC1091
 source "$(dirname "$0")/../share/build-functions.sh"

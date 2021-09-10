@@ -4,18 +4,22 @@
 _BUILD_FUNCTIONS=yes
 
 function gitlab_login {
-  if [ -n "$CI_REGISTRY_IMAGE" ]; then
-    if [ -n "$CI_REGISTRY_USER" ]; then
-      echo "Detected GitLab Container registry - logging in using CI_REGISTRY_USER..."
-      docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
-    else
-      if [ -n "$CI_DEPLOY_USER" ]; then
-        echo "Detected GitLab Container registry - logging in using CI_DEPLOY_USER..."
-        docker login -u "$CI_DEPLOY_USER" -p "$CI_DEPLOY_PASSWORD" "$CI_REGISTRY"
+  if [ ! -e .docker-logged-in ]; then
+    if [ -n "$CI_REGISTRY_IMAGE" ]; then
+      if [ -n "$CI_REGISTRY_USER" ]; then
+        echo "Detected GitLab Container registry - logging in using CI_REGISTRY_USER..."
+        docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
       else
-        echo "No credentials defined to login to GitLab Container Registry. See https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#authenticating-to-the-container-registry for options."
-        exit 1
+        if [ -n "$CI_DEPLOY_USER" ]; then
+          echo "Detected GitLab Container registry - logging in using CI_DEPLOY_USER..."
+          docker login -u "$CI_DEPLOY_USER" -p "$CI_DEPLOY_PASSWORD" "$CI_REGISTRY"
+        else
+          echo "No credentials defined to login to GitLab Container Registry. See https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#authenticating-to-the-container-registry for options."
+          exit 1
+        fi
       fi
+
+      touch .docker-logged-in
     fi
   fi
 }
@@ -23,7 +27,7 @@ function gitlab_login {
 function exit_if_image_present {
   if [ "$FORCE" != "1" ] && [ -z "$VULNERABLE" ]; then
     echo "Checking if ${FULL_IMAGE} already exists..."
-    if ! check-tag.sh "${FULL_IMAGE}"; then
+    if check-tag.sh "${FULL_IMAGE}"; then
       echo "Docker image ${FULL_IMAGE} already exists - skipping build"
       exit 0
     fi
@@ -86,15 +90,17 @@ if [ -e .trivy-vulnerable ]; then
   VULNERABLE="1"
 fi
 
-echo "*** IMAGE BUILD SETTINGS ***"
-echo "============================"
-echo "IMAGE: $IMAGE"
-echo "TAG: $TAG"
-echo "ARCH: $ARCH"
-echo "BUILD_DIR: $BUILD_DIR"
-echo "DOCKERFILE: $DOCKERFILE"
-echo "MULTIARCH: $MULTIARCH"
-echo BUILD_ARGS: "${BUILD_ARGS[@]}"
-echo "FORCE: $FORCE"
-echo "VULNERABLE: $VULNERABLE"
-echo "============================"
+if [ -z "${QUIET}" ]; then
+  echo "*** IMAGE BUILD SETTINGS ***"
+  echo "============================"
+  echo "IMAGE: $IMAGE"
+  echo "TAG: $TAG"
+  echo "ARCH: $ARCH"
+  echo "BUILD_DIR: $BUILD_DIR"
+  echo "DOCKERFILE: $DOCKERFILE"
+  echo "MULTIARCH: $MULTIARCH"
+  echo BUILD_ARGS: "${BUILD_ARGS[@]}"
+  echo "FORCE: $FORCE"
+  echo "VULNERABLE: $VULNERABLE"
+  echo "============================"
+fi

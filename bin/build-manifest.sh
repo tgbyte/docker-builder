@@ -16,6 +16,7 @@ if [ "$FORCE" != "1" ] && [ -z "$VULNERABLE" ]; then
 fi
 
 cd "${BUILD_DIR}/results"
+echo "Creating Docker manifest $FULL_IMAGE..."
 # shellcheck disable=SC2046
 docker manifest create "$FULL_IMAGE" $(cat *)
 
@@ -24,4 +25,5 @@ for i in *; do
   docker manifest annotate "$FULL_IMAGE" $(cat "$i") --arch "$i"
 done
 
+echo "Pushing Docker manifest $FULL_IMAGE..."
 docker manifest push "$FULL_IMAGE"

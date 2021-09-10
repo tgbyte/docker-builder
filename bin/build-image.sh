@@ -22,10 +22,12 @@ if [ -n "$MULTIARCH" ] && [ "$ARCH" != "" ] && [ "$ARCH" != "amd64" ]; then
   set -e
 fi
 
+echo "Building Docker image ${IMAGE_NAME}..."
 docker build --no-cache --pull --platform "${PLATFORM}" -t "$IMAGE_NAME" -f "$DOCKERFILE" "${BUILD_ARGS[@]}" "$BUILD_DIR"
 
 mkdir -p results
 
+echo "Pushing Docker image ${IMAGE_NAME}..."
 docker push "$IMAGE_NAME"
 
 if [ -n "$MULTIARCH" ]; then

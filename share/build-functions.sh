@@ -63,6 +63,18 @@ while IFS='=' read -r -d '' n v; do
     BUILD_ARGS+=("$n=$v")
 done < <(env -0 | grep -z '^ARG_' | sed -rze 's/^ARG_//')
 
+if [ ! -e .trivy-run ]; then
+  # shellcheck disable=SC2034
+  FORCE="1"
+fi
+
+if [ -e .trivy-vulnerable ]; then
+  # shellcheck disable=SC2034
+  VULNERABLE="1"
+fi
+
+echo "*** IMAGE BUILD SETTINGS ***"
+echo "============================"
 echo "IMAGE: $IMAGE"
 echo "TAG: $TAG"
 echo "ARCH: $ARCH"
@@ -70,3 +82,5 @@ echo "BUILD_DIR: $BUILD_DIR"
 echo "DOCKERFILE: $DOCKERFILE"
 echo "MULTIARCH: $MULTIARCH"
 echo BUILD_ARGS: "${BUILD_ARGS[@]}"
+echo "FORCE: $FORCE"
+echo "VULNERABLE: $VULNERABLE"

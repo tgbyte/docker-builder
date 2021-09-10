@@ -9,20 +9,12 @@ else
   IMAGE_NAME=${FULL_IMAGE_ARCH}
 fi
 
-if [ ! -e .trivy ]; then
-  FORCE="1"
-fi
-
-if [ -e .trivy-vulnerable ]; then
-  VULNERABLE="1"
-fi
+gitlab_login
 
 if [ "$FORCE" != "1" ] && [ -z "$VULNERABLE" ]; then
   echo Exit if "${FULL_IMAGE}" already exists
   check-tag.sh "${FULL_IMAGE}" && exit 0
 fi
-
-gitlab_login
 
 if [ -n "$MULTIARCH" ] && [ "$ARCH" != "" ]; then
   set +e

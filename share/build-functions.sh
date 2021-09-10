@@ -1,5 +1,8 @@
 #!/bin/bash
 
+[[ "${_BUILD_FUNCTIONS:-""}" == "yes" ]] && return 0
+_BUILD_FUNCTIONS=yes
+
 function gitlab_login {
   if [ -n "$CI_REGISTRY_IMAGE" ]; then
     if [ -n "$CI_REGISTRY_USER" ]; then

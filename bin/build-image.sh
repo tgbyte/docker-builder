@@ -16,15 +16,13 @@ if [ "$FORCE" != "1" ] && [ -z "$VULNERABLE" ]; then
   check-tag.sh "${FULL_IMAGE}" && exit 0
 fi
 
-if [ -n "$MULTIARCH" ] && [ "$ARCH" != "" ]; then
+if [ -n "$MULTIARCH" ] && [ "$ARCH" != "" ] && [ "$ARCH" != "amd64" ]; then
   set +e
   docker run --privileged --rm tonistiigi/binfmt --install "$ARCH"
   set -e
 fi
 
-set -x
-docker build --no-cache --pull --platform ${PLATFORM} -t "$IMAGE_NAME" -f "$DOCKERFILE" "${BUILD_ARGS[@]}" "$BUILD_DIR"
-set +x
+docker build --no-cache --pull --platform "${PLATFORM}" -t "$IMAGE_NAME" -f "$DOCKERFILE" "${BUILD_ARGS[@]}" "$BUILD_DIR"
 
 mkdir -p results
 

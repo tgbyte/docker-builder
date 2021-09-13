@@ -6,6 +6,7 @@ stages:
   - scan
   - build-image
   - build-manifest
+  - verify
 
 trivy:
   stage: scan
@@ -51,6 +52,30 @@ build-manifest:
   stage: build-manifest
   script:
     - ${BUILD_MANIFEST_SCRIPT:-build-manifest.sh}
+  needs:
+    - job: trivy
+      optional: true
+    - job: build-amd64
+    - job: build-arm64
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $MULTIARCH == "1"
+
+.trivy-result-template: &trivy-result
+  stage: verify
+  script:
+    - ${TRIVY_SCRIPT:-trivy.sh}
+
+trivy-result:
+  <<: *trivy-result
+  needs:
+    - job: trivy
+      optional: true
+    - job: build-amd64
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $MULTIARCH != "1"
+
+trivy-result-multiarch:
+  <<: *trivy-result
   needs:
     - job: trivy
       optional: true

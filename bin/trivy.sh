@@ -21,7 +21,7 @@ trivy \
 EXITCODE=$?
 
 if [ $EXITCODE -eq 2 ]; then
-  echo "Detected vulnerable Docker image ${FULL_IMAGE} - forcing rebuild"
+  echo "Detected vulnerable Docker image ${FULL_IMAGE}..."
   touch .trivy-vulnerable
 fi
 touch .trivy-run

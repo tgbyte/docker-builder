@@ -18,16 +18,20 @@ if [ -n "${MULTIARCH}" ] && [ "${ARCH}" != "" ] && [ "${ARCH}" != "amd64" ]; the
   set -e
 fi
 
+if [ -n "${DOCKER_SQUASH}" ]; then
+  squash="--squash"
+fi
+
 echo "Building Docker image ${IMAGE_NAME}..."
-docker build --no-cache --pull --platform "${PLATFORM}" -t "$IMAGE_NAME" -f "$DOCKERFILE" "${BUILD_ARGS[@]}" "$BUILD_DIR"
+docker build --no-cache --pull --platform "${PLATFORM}" -t "${IMAGE_NAME}" -f "${DOCKERFILE}" ${squash} "${BUILD_ARGS[@]}" "${BUILD_DIR}"
 
 mkdir -p results
 
 echo "Pushing Docker image ${IMAGE_NAME}..."
-docker push "$IMAGE_NAME"
+docker push "${IMAGE_NAME}"
 
-if [ -n "$MULTIARCH" ]; then
-  FULL_IMAGE_ARCH_SHA=$(docker inspect --format='{{ index .RepoDigests 0 }}' "$IMAGE_NAME")
+if [ -n "${MULTIARCH}" ]; then
+  FULL_IMAGE_ARCH_SHA=$(docker inspect --format='{{ index .RepoDigests 0 }}' "${IMAGE_NAME}")
   mkdir -p "${BUILD_DIR}/results"
-  echo "$FULL_IMAGE_ARCH_SHA" > "${BUILD_DIR}/results/${ARCH}"
+  echo "${FULL_IMAGE_ARCH_SHA}" > "${BUILD_DIR}/results/${ARCH}"
 fi

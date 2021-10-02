@@ -34,19 +34,32 @@ function exit_if_image_present {
   fi
 }
 
+function build_log {
+  if [ "$VERBOSE" == "1" ]; then
+    echo "$1"
+  fi
+}
+
 if [ -z "$IMAGE" ]; then
   if [ -n "$CI_REGISTRY_IMAGE" ]; then
     IMAGE=${CI_REGISTRY_IMAGE}
+    build_log "Detected GitLab Container Registry using CI_REGISTRY_IMAGE env variable: ${IMAGE}"
   else
     IMAGE=${CI_PROJECT_PATH/docker/tgbyte}
+    build_log "Publishing image on Docker Hub: ${IMAGE}"
   fi
 fi
 
 if [ -e .version ]; then
+  build_log "Detected existing .version file"
   VERSION=$(cat .version)
 elif [ -e .gitlab-ci/version.sh ]; then
+  build_log "Determining version using .gitlab-ci/version.sh"
   VERSION=$(.gitlab-ci/version.sh)
+  build_log "Detected version: ${VERSION}"
   echo "${VERSION}" > .version
+else
+  build_log "Cannot determine version"
 fi
 
 if [ -z "$TAG" ]; then
@@ -92,11 +105,13 @@ while IFS='=' read -r -d '' n v; do
 done < <(env -0 | grep -z '^ARG_' | sed -rze 's/^ARG_//')
 
 if [ ! -e .trivy-run ]; then
+  build_log "Trivy did not run - forcing build"
   # shellcheck disable=SC2034
   FORCE="1"
 fi
 
 if [ -e .trivy-vulnerable ]; then
+  build_log "Trivy detected vulnerabilities - forcing build"
   # shellcheck disable=SC2034
   VULNERABLE="1"
 fi

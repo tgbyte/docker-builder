@@ -4,6 +4,7 @@ FROM docker:${DOCKER_VERSION:-latest}
 
 ENV LANG C.UTF-8
 RUN set -x \
+    && apk upgrade --no-cache \
     && apk add --no-cache \
          bash \
          coreutils \

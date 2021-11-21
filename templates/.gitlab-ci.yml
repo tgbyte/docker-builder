@@ -31,7 +31,7 @@ trivy:
     expire_in: 1 day
     paths:
       - results/
-      - **/results/
+      - '**/results/'
       - .version
   needs:
     - job: trivy

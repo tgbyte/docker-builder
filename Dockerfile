@@ -14,6 +14,8 @@ RUN set -x \
          httpie \
          jq \
          make \
+         nodejs \
+         npm \
          openssh-client \
          sed \
          skopeo \

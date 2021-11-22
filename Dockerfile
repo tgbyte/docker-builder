@@ -17,6 +17,8 @@ RUN set -x \
          nodejs \
          npm \
          openssh-client \
+         py3-pip \
+         python3 \
          sed \
          skopeo \
     && apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/testing \

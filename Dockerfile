@@ -17,7 +17,8 @@ RUN set -x \
          nodejs \
          npm \
          openssh-client \
-         py3-pip \
+         patch \
+     py3-pip \
          python3 \
          sed \
          skopeo \

@@ -21,6 +21,7 @@ RUN set -x \
          py3-pip \
          python3 \
          sed \
+    && apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community \
          skopeo \
     && apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/testing \
          trivy

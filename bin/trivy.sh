@@ -21,6 +21,8 @@ trivy \
 EXITCODE=$?
 
 if [ -n "${TRIVY_REPORT_JSON}" ]; then
+  echo "Generating Trivy JSON report..."
+
   trivy \
     --cache-dir .trivy \
     image \

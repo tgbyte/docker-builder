@@ -20,6 +20,17 @@ trivy \
   "${FULL_IMAGE}"
 EXITCODE=$?
 
+if [ -n "${TRIVY_REPORT_JSON}" ]; then
+  trivy \
+    --cache-dir .trivy \
+    image \
+    --severity "${TRIVY_SEVERITY:-HIGH,CRITICAL,MEDIUM}" \
+    --vuln-type "${TRIVY_VULN_TYPE:-os,library}" \
+    --no-progress \
+    --format json \
+    "${FULL_IMAGE}" > .trivy-report.json
+fi
+
 if [ $EXITCODE -eq 2 ]; then
   echo "Detected vulnerable Docker image ${FULL_IMAGE}..."
   touch .trivy-vulnerable

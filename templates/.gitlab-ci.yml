@@ -65,10 +65,16 @@ build-manifest:
   stage: verify
   script:
     - ${TRIVY_SCRIPT:-trivy.sh}
+  artifacts:
+    expire_in: 1 month
+    paths:
+      - .trivy-report.json
   needs:
     - job: trivy
       optional: true
     - job: build-amd64
+  variables:
+    TRIVY_REPORT_JSON: 1
 
 trivy-result:
   <<: *trivy-result

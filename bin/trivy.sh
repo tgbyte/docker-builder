@@ -28,6 +28,7 @@ if [ -n "${TRIVY_REPORT_JSON}" ]; then
     image \
     --severity "${TRIVY_SEVERITY:-HIGH,CRITICAL,MEDIUM}" \
     --vuln-type "${TRIVY_VULN_TYPE:-os,library}" \
+    --ignore-unfixed \
     --no-progress \
     --format json \
     "${FULL_IMAGE}" > .trivy-report.json

@@ -69,6 +69,7 @@ build-manifest:
     expire_in: 1 month
     paths:
       - .trivy-report.json
+    when: always
   needs:
     - job: trivy
       optional: true

@@ -27,11 +27,13 @@ docker build --no-cache --pull --platform "${PLATFORM}" -t "${IMAGE_NAME}" -f "$
 
 mkdir -p results
 
-echo "Pushing Docker image ${IMAGE_NAME}..."
-docker push "${IMAGE_NAME}"
+if [ -z "${SKIP_DOCKER_PUSH}" ]; then
+  echo "Pushing Docker image ${IMAGE_NAME}..."
+  docker push "${IMAGE_NAME}"
 
-if [ -n "${MULTIARCH}" ]; then
-  FULL_IMAGE_ARCH_SHA=$(docker inspect --format='{{ index .RepoDigests 0 }}' "${IMAGE_NAME}")
-  mkdir -p "${BUILD_DIR}/results"
-  echo "${FULL_IMAGE_ARCH_SHA}" > "${BUILD_DIR}/results/${ARCH}"
+  if [ -n "${MULTIARCH}" ]; then
+    FULL_IMAGE_ARCH_SHA=$(docker inspect --format='{{ index .RepoDigests 0 }}' "${IMAGE_NAME}")
+    mkdir -p "${BUILD_DIR}/results"
+    echo "${FULL_IMAGE_ARCH_SHA}" > "${BUILD_DIR}/results/${ARCH}"
+  fi
 fi

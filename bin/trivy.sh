@@ -12,7 +12,7 @@ set +e
 trivy \
   --cache-dir .trivy \
   image \
-  --security-checks "${TRIVY_SECURITY_CHECKS:-vuln,config}" \
+  --scanners "${TRIVY_SCANNERS:-vuln,config}" \
   --severity "${TRIVY_SEVERITY:-HIGH,CRITICAL,MEDIUM}" \
   --vuln-type "${TRIVY_VULN_TYPE:-os,library}" \
   --ignore-unfixed \

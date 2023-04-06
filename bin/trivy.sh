@@ -9,12 +9,25 @@ echo "Scanning ${FULL_IMAGE} for vulnerabilities..."
 
 set +e
 
+TRIVY_PARAMS=()
+if [ -n "${TRIVY_SCANNERS}" ]; then
+    TRIVY_PARAMS+=(--scanners)
+    TRIVY_PARAMS+=("${TRIVY_SCANNERS}")
+fi
+if [ -n "${TRIVY_SKIP_DIRS}" ]; then
+    TRIVY_PARAMS+=(--skip-dirs)
+    TRIVY_PARAMS+=("${TRIVY_SKIP_DIRS}")
+fi
+if [ -n "${TRIVY_VULN_TYPE}" ]; then
+    TRIVY_PARAMS+=(--vuln-type)
+    TRIVY_PARAMS+=("${TRIVY_VULN_TYPE}")
+fi
+
 trivy \
   --cache-dir .trivy \
   image \
-  --scanners "${TRIVY_SCANNERS:-vuln,config}" \
   --severity "${TRIVY_SEVERITY:-HIGH,CRITICAL,MEDIUM}" \
-  --vuln-type "${TRIVY_VULN_TYPE:-os,library}" \
+  "${TRIVY_PARAMS[@]}" \
   --ignore-unfixed \
   --exit-code 2 \
   --no-progress \
@@ -28,7 +41,7 @@ if [ -n "${TRIVY_REPORT_JSON}" ]; then
     --cache-dir .trivy \
     image \
     --severity "${TRIVY_SEVERITY:-HIGH,CRITICAL,MEDIUM}" \
-    --vuln-type "${TRIVY_VULN_TYPE:-os,library}" \
+    "${TRIVY_PARAMS[@]}" \
     --ignore-unfixed \
     --no-progress \
     --format json \

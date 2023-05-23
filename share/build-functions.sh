@@ -66,12 +66,12 @@ if [ -z "$TAG" ]; then
   if [ -n "$VERSION" ]; then
     TAG="$VERSION"
   else
-    case ${CI_BUILD_REF_NAME} in
+    case ${CI_COMMIT_REF_NAME} in
     master|main)
       TAG="latest"
       ;;
     *)
-      TAG=${CI_BUILD_REF_NAME//[^0-9A-Za-z_.\-]/-}
+      TAG=${CI_COMMIT_REF_NAME//[^0-9A-Za-z_.\-]/-}
       ;;
     esac
   fi

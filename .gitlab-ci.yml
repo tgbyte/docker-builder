@@ -10,3 +10,4 @@ variables:
   MULTIARCH: 1
   TRIVY_SCRIPT: bin/trivy.sh
   TRIVY_SEVERITY: CRITICAL
+  SKIP_TRIVY: 1

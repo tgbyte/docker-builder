@@ -41,6 +41,7 @@ if [ -n "${TRIVY_REPORT_JSON}" ]; then
     --cache-dir .trivy \
     image \
     --severity "${TRIVY_SEVERITY:-HIGH,CRITICAL,MEDIUM}" \
+    --db-repository public.ecr.aws/aquasecurity/trivy-db:2 \
     "${TRIVY_PARAMS[@]}" \
     --ignore-unfixed \
     --no-progress \

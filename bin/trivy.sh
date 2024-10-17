@@ -9,6 +9,8 @@ echo "Scanning ${FULL_IMAGE} for vulnerabilities..."
 
 set +e
 
+TRIVY_DB_REPOSITORY=public.ecr.aws/aquasecurity/trivy-db:2
+
 TRIVY_PARAMS=()
 if [ -n "${TRIVY_SCANNERS}" ]; then
     TRIVY_PARAMS+=(--scanners)
@@ -21,6 +23,10 @@ fi
 if [ -n "${TRIVY_VULN_TYPE}" ]; then
     TRIVY_PARAMS+=(--vuln-type)
     TRIVY_PARAMS+=("${TRIVY_VULN_TYPE}")
+fi
+if [ -n "${TRIVY_DB_REPOSITORY}" ]; then
+    TRIVY_PARAMS+=(--db-repository)
+    TRIVY_PARAMS+=("${TRIVY_DB_REPOSITORY}")
 fi
 
 trivy \
@@ -41,7 +47,6 @@ if [ -n "${TRIVY_REPORT_JSON}" ]; then
     --cache-dir .trivy \
     image \
     --severity "${TRIVY_SEVERITY:-HIGH,CRITICAL,MEDIUM}" \
-    --db-repository public.ecr.aws/aquasecurity/trivy-db:2 \
     "${TRIVY_PARAMS[@]}" \
     --ignore-unfixed \
     --no-progress \

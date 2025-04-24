@@ -75,6 +75,7 @@ build-manifest:
       optional: true
     - job: build-amd64
   variables:
+    TRIVY_DISABLE_VEX_NOTICE: 1
     TRIVY_REPORT_JSON: 1
 
 trivy-result:

@@ -51,6 +51,7 @@ if [ -n "${TRIVY_REPORT_JSON}" ]; then
     --ignore-unfixed \
     --no-progress \
     --format json \
+    --skip-version-check \
     "${FULL_IMAGE}" > .trivy-report.json
 fi
 

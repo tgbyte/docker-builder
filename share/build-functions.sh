@@ -150,5 +150,6 @@ if [ -z "${QUIET}" ]; then
   echo "MULTIARCH: $MULTIARCH"
   echo "VERSION: $VERSION"
   echo "VULNERABLE: $VULNERABLE"
+  echo "BUILD_HELM_CHART: $BUILD_HELM_CHART"
   echo "============================"
 fi

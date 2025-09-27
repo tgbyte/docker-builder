@@ -3,10 +3,9 @@
 # shellcheck disable=SC1091
 source "$(dirname "$0")/../share/build-functions.sh"
 
-IMAGE_NAME=${HELM_CHART_IMAGE}
+IMAGE_NAME="${HELM_CHART_IMAGE}"
 
 gitlab_login
-exit_if_image_present
 
 echo "Building Helm chart ${IMAGE_NAME}..."
 

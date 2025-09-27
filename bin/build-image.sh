@@ -37,3 +37,7 @@ if [ -z "${SKIP_DOCKER_PUSH}" ]; then
     echo "${FULL_IMAGE_ARCH_SHA}" > "${BUILD_DIR}/results/${ARCH}"
   fi
 fi
+
+if [ -n "$BUILD_HELM_CHART" ]; then
+  build-helm.sh
+fi

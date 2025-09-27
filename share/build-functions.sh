@@ -9,10 +9,18 @@ function gitlab_login {
       if [ -n "$CI_REGISTRY_USER" ]; then
         echo "Detected GitLab Container registry - logging in using CI_REGISTRY_USER..."
         docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+        if [ -n "$BUILD_HELM_CHART" ]; then
+          helm registry login "oci://${CI_REGISTRY}" \
+            --username "$CI_REGISTRY_USER" \
+            --password "$CI_REGISTRY_PASSWORD"
+        fi
       else
         if [ -n "$CI_DEPLOY_USER" ]; then
           echo "Detected GitLab Container registry - logging in using CI_DEPLOY_USER..."
           docker login -u "$CI_DEPLOY_USER" -p "$CI_DEPLOY_PASSWORD" "$CI_REGISTRY"
+          helm registry login "oci://${CI_REGISTRY}" \
+            --username "$CI_DEPLOY_USER" \
+            --password "$CI_DEPLOY_PASSWORD"
         else
           echo "No credentials defined to login to GitLab Container Registry. See https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#authenticating-to-the-container-registry for options."
           exit 1
@@ -93,10 +101,23 @@ if [ -z "$BUILD_DIR" ]; then
   DOCKERFILE="${BUILD_DIR}/Dockerfile"
 fi
 
+if [ -z "$HELM_CHART_DIR" ]; then
+  HELM_CHART_DIR="${BUILD_DIR}/charts/${CI_PROJECT_NAME}"
+fi
+
+if [ -d "$HELM_CHART_DIR" ]; then
+  BUILD_HELM_CHART="1"
+fi
+
+if [ -z "$HELM_CHART_NAME" ]; then
+  HELM_CHART_NAME="${CI_PROJECT_NAME}"
+fi
+
 # shellcheck disable=SC2034
 FULL_IMAGE_ARCH="$IMAGE":"$TAG"-"$ARCH"
 # shellcheck disable=SC2034
 FULL_IMAGE="$IMAGE":"$TAG"
+HELM_CHART_IMAGE="oci://${IMAGE}/helm"
 
 declare -a BUILD_ARGS
 while IFS='=' read -r -d '' n v; do

@@ -2,7 +2,7 @@ ARG DOCKER_VERSION
 
 FROM docker:${DOCKER_VERSION:-latest}
 
-ENV LANG C.UTF-8
+ENV LANG=C.UTF-8
 RUN set -x \
     && apk upgrade --no-cache \
     && apk add --no-cache \
@@ -11,6 +11,7 @@ RUN set -x \
          curl \
          git \
          grep \
+         helm \
          httpie \
          jq \
          make \

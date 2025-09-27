@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 
 # shellcheck disable=SC1091
 source "$(dirname "$0")/../share/build-functions.sh"

@@ -10,7 +10,7 @@ function gitlab_login {
         echo "Detected GitLab Container registry - logging in using CI_REGISTRY_USER..."
         docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
         if [ -n "$BUILD_HELM_CHART" ]; then
-          helm registry login "oci://${CI_REGISTRY}" \
+          helm registry login "${CI_REGISTRY}" \
             --username "$CI_REGISTRY_USER" \
             --password "$CI_REGISTRY_PASSWORD"
         fi
@@ -18,7 +18,7 @@ function gitlab_login {
         if [ -n "$CI_DEPLOY_USER" ]; then
           echo "Detected GitLab Container registry - logging in using CI_DEPLOY_USER..."
           docker login -u "$CI_DEPLOY_USER" -p "$CI_DEPLOY_PASSWORD" "$CI_REGISTRY"
-          helm registry login "oci://${CI_REGISTRY}" \
+          helm registry login "${CI_REGISTRY}" \
             --username "$CI_DEPLOY_USER" \
             --password "$CI_DEPLOY_PASSWORD"
         else

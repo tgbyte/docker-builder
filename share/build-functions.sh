@@ -101,16 +101,16 @@ if [ -z "$BUILD_DIR" ]; then
   DOCKERFILE="${BUILD_DIR}/Dockerfile"
 fi
 
+if [ -z "$HELM_CHART_NAME" ]; then
+  HELM_CHART_NAME="${CI_PROJECT_NAME}"
+fi
+
 if [ -z "$HELM_CHART_DIR" ]; then
-  HELM_CHART_DIR="${BUILD_DIR}/charts/${CI_PROJECT_NAME}"
+  HELM_CHART_DIR="${BUILD_DIR}/charts/${HELM_CHART_NAME}"
 fi
 
 if [ -d "$HELM_CHART_DIR" ]; then
   BUILD_HELM_CHART="1"
-fi
-
-if [ -z "$HELM_CHART_NAME" ]; then
-  HELM_CHART_NAME="${CI_PROJECT_NAME}"
 fi
 
 # shellcheck disable=SC2034

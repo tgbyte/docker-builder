@@ -8,7 +8,7 @@ if [ -z "${MULTIARCH}" ]; then
   exit 1
 fi
 
-gitlab_login
+docker_login
 exit_if_image_present
 
 cd "${BUILD_DIR}/results"

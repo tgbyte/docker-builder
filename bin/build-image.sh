@@ -9,7 +9,7 @@ else
   IMAGE_NAME=${FULL_IMAGE_ARCH}
 fi
 
-gitlab_login
+docker_login
 exit_if_image_present
 
 if [ -n "${MULTIARCH}" ] && [ "${ARCH}" != "" ] && [ "${ARCH}" != "amd64" ]; then

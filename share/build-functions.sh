@@ -3,32 +3,46 @@
 [[ "${_BUILD_FUNCTIONS:-""}" == "yes" ]] && return 0
 _BUILD_FUNCTIONS=yes
 
-function gitlab_login {
+function docker_login {
   if [ ! -e .docker-logged-in ]; then
     if [ -n "$CI_REGISTRY_IMAGE" ]; then
-      if [ -n "$CI_REGISTRY_USER" ]; then
-        echo "Detected GitLab Container registry - logging in using CI_REGISTRY_USER..."
-        docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
-        if [ -n "$BUILD_HELM_CHART" ]; then
-          helm registry login "${CI_REGISTRY}" \
-            --username "$CI_REGISTRY_USER" \
-            --password "$CI_REGISTRY_PASSWORD"
-        fi
-      else
-        if [ -n "$CI_DEPLOY_USER" ]; then
-          echo "Detected GitLab Container registry - logging in using CI_DEPLOY_USER..."
-          docker login -u "$CI_DEPLOY_USER" -p "$CI_DEPLOY_PASSWORD" "$CI_REGISTRY"
-          helm registry login "${CI_REGISTRY}" \
-            --username "$CI_DEPLOY_USER" \
-            --password "$CI_DEPLOY_PASSWORD"
-        else
-          echo "No credentials defined to login to GitLab Container Registry. See https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#authenticating-to-the-container-registry for options."
-          exit 1
-        fi
-      fi
-
-      touch .docker-logged-in
+      gitlab_login
+    else
+      docker_hub_login
     fi
+  fi
+}
+
+function gitlab_login {
+  if [ -n "$CI_REGISTRY_USER" ]; then
+    echo "Detected GitLab Container registry - logging in using CI_REGISTRY_USER..."
+    echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+    if [ -n "$BUILD_HELM_CHART" ]; then
+      helm registry login "${CI_REGISTRY}" \
+        --username "$CI_REGISTRY_USER" \
+        --password "$CI_REGISTRY_PASSWORD"
+    fi
+  else
+    if [ -n "$CI_DEPLOY_USER" ]; then
+      echo "Detected GitLab Container registry - logging in using CI_DEPLOY_USER..."
+      echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+      helm registry login "${CI_REGISTRY}" \
+        --username "$CI_DEPLOY_USER" \
+        --password "$CI_DEPLOY_PASSWORD"
+    else
+      echo "No credentials defined to login to GitLab Container Registry. See https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#authenticating-to-the-container-registry for options."
+      exit 1
+    fi
+  fi
+
+  touch .docker-logged-in
+}
+
+function docker_hub_login {
+  if [ -n "$DOCKER_HUB_USER" ]; then
+    echo "Detected Docker Hub - logging in using DOCKER_HUB_USER..."
+    echo "$DOCKER_HUB_PASSWORD" | docker login -u "$DOCKER_HUB_USER" --password-stdin
+    touch .docker-logged-in
   fi
 }
 

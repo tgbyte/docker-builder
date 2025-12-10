@@ -3,6 +3,8 @@
 [[ "${_BUILD_FUNCTIONS:-""}" == "yes" ]] && return 0
 _BUILD_FUNCTIONS=yes
 
+echo "tgbyte/builder - Git commit $(cat /usr/local/etc/.builder-commit) @ $(cat /usr/local/etc/.builder-commit-date)"
+
 function docker_login {
   if [ ! -e .docker-logged-in ]; then
     if [ -n "$CI_REGISTRY_IMAGE" ]; then
@@ -131,7 +133,13 @@ fi
 FULL_IMAGE_ARCH="$IMAGE":"$TAG"-"$ARCH"
 # shellcheck disable=SC2034
 FULL_IMAGE="$IMAGE":"$TAG"
+# shellcheck disable=SC2034
 HELM_CHART_IMAGE="oci://${IMAGE}/helm"
+
+# shellcheck disable=SC2034
+ARG_GIT_COMMIT=$(git rev-parse --short HEAD)
+# shellcheck disable=SC2034
+ARG_GIT_COMMIT_DATE=$(git show -s --format=%cd)
 
 declare -a BUILD_ARGS
 while IFS='=' read -r -d '' n v; do

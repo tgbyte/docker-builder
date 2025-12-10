@@ -2,6 +2,9 @@ ARG DOCKER_VERSION
 
 FROM docker:${DOCKER_VERSION:-latest}
 
+ARG GIT_COMMIT
+ARG GIT_COMMIT_DATE
+
 ENV LANG=C.UTF-8
 RUN set -x \
     && apk upgrade --no-cache \
@@ -29,3 +32,8 @@ RUN set -x \
 
 COPY bin/* /usr/local/bin/
 COPY share/* /usr/local/share/
+
+RUN set -x \
+    && mkdir -p /usr/local/etc \
+    && echo $GIT_COMMIT > /usr/local/etc/.builder-commit \
+    && echo $GIT_COMMIT_DATE > /usr/local/etc/.builder-commit-date

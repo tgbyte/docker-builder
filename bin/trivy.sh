@@ -37,6 +37,7 @@ trivy \
   --ignore-unfixed \
   --exit-code 2 \
   --no-progress \
+  --skip-version-check \
   "${FULL_IMAGE}"
 EXITCODE=$?
 

@@ -5,10 +5,10 @@ set -e
 # shellcheck disable=SC1091
 source "$(dirname "$0")/../share/build-functions.sh"
 
-docker_login
+registry_login
 
 for NEW_TAG in "$@"; do
   NEW_FULL_IMAGE="${IMAGE}:${NEW_TAG}"
-  docker tag "${FULL_IMAGE}" "${NEW_FULL_IMAGE}"
-  docker push "${NEW_FULL_IMAGE}"
+  buildah tag "${FULL_IMAGE}" "${NEW_FULL_IMAGE}"
+  buildah push "${NEW_FULL_IMAGE}" "docker://${NEW_FULL_IMAGE}"
 done

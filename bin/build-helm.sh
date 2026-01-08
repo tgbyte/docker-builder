@@ -5,7 +5,7 @@ source "$(dirname "$0")/../share/build-functions.sh"
 
 IMAGE_NAME="${HELM_CHART_IMAGE}"
 
-docker_login
+registry_login
 
 echo "Building Helm chart ${IMAGE_NAME}..."
 

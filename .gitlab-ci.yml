@@ -1,7 +1,8 @@
-image: tgbyte/builder
+image: tgbyte/builder:buildah
 
 include:
   - project: 'docker/builder'
+    ref: 'buildah'
     file: '/templates/.gitlab-ci.yml'
 
 variables:

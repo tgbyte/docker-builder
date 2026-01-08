@@ -5,7 +5,7 @@ QUIET=1
 # shellcheck disable=SC1091
 source "$(dirname "$0")/../share/build-functions.sh"
 
-docker_login
+registry_login
 
 set +e
 skopeo inspect "docker://$1" > /dev/null 2>&1

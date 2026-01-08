@@ -9,12 +9,16 @@ else
   IMAGE_NAME=${FULL_IMAGE_ARCH}
 fi
 
-docker_login
+registry_login
 exit_if_image_present
 
 if [ -n "${MULTIARCH}" ] && [ "${ARCH}" != "" ] && [ "${ARCH}" != "amd64" ]; then
   set +e
-  docker run --privileged --rm tonistiigi/binfmt --install "${ARCH}"
+  binfmt_ctr=$(buildah from --pull docker.io/tonistiigi/binfmt 2>/dev/null)
+  if [ -n "${binfmt_ctr}" ]; then
+    buildah run "${binfmt_ctr}" --install "${ARCH}"
+    buildah rm "${binfmt_ctr}"
+  fi
   set -e
 fi
 
@@ -22,17 +26,21 @@ if [ -n "${DOCKER_SQUASH}" ]; then
   squash="--squash"
 fi
 
-echo "Building Docker image ${IMAGE_NAME}..."
-docker build --no-cache --pull --platform "${PLATFORM}" -t "${IMAGE_NAME}" -f "${DOCKERFILE}" ${squash} "${BUILD_ARGS[@]}" "${BUILD_DIR}"
+echo "Building image ${IMAGE_NAME}..."
+: "${BUILDAH_ISOLATION:=chroot}"
+: "${BUILDAH_STORAGE_DRIVER:=vfs}"
+export BUILDAH_ISOLATION
+export BUILDAH_STORAGE_DRIVER
+buildah bud --no-cache --pull --platform "${PLATFORM}" --isolation "${BUILDAH_ISOLATION}" -t "${IMAGE_NAME}" -f "${DOCKERFILE}" ${squash} "${BUILD_ARGS[@]}" "${BUILD_DIR}"
 
 mkdir -p results
 
 if [ -z "${SKIP_DOCKER_PUSH}" ]; then
-  echo "Pushing Docker image ${IMAGE_NAME}..."
-  docker push "${IMAGE_NAME}"
+  echo "Pushing image ${IMAGE_NAME}..."
+  buildah push "${IMAGE_NAME}" "docker://${IMAGE_NAME}"
 
   if [ -n "${MULTIARCH}" ]; then
-    FULL_IMAGE_ARCH_SHA=$(docker inspect --format='{{ index .RepoDigests 0 }}' "${IMAGE_NAME}")
+    FULL_IMAGE_ARCH_SHA=$(skopeo inspect --format '{{.Digest}}' "docker://${IMAGE_NAME}")
     mkdir -p "${BUILD_DIR}/results"
     echo "${FULL_IMAGE_ARCH_SHA}" > "${BUILD_DIR}/results/${ARCH}"
   fi

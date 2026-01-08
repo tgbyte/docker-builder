@@ -1,14 +1,26 @@
-ARG DOCKER_VERSION
-
-FROM docker:${DOCKER_VERSION:-latest}
+FROM ubuntu:24.04
 
 ARG GIT_COMMIT
 ARG GIT_COMMIT_DATE
 
 ENV LANG=C.UTF-8
 RUN set -x \
-    && apk upgrade --no-cache \
-    && apk add --no-cache \
+    && apt-get update -qq \
+    && apt-get install -y --no-install-recommends -qq \
+         ca-certificates \
+         curl \
+         gnupg \
+         software-properties-common \
+    && add-apt-repository -y universe \
+    && mkdir -p /etc/apt/keyrings \
+    && curl -fsSL https://packages.buildkite.com/helm-linux/helm-debian/gpgkey | gpg --dearmor -o /etc/apt/keyrings/helm.gpg \
+    && echo "deb [signed-by=/etc/apt/keyrings/helm.gpg] https://packages.buildkite.com/helm-linux/helm-debian/any/ any main" \
+         > /etc/apt/sources.list.d/helm-stable-debian.list \
+    && curl -fsSL https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor -o /etc/apt/keyrings/trivy.gpg \
+    && echo "deb [signed-by=/etc/apt/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb generic main" \
+         > /etc/apt/sources.list.d/trivy.list \
+    && apt-get update -qq \
+    && apt-get install -y --no-install-recommends -qq \
          bash \
          coreutils \
          curl \
@@ -22,13 +34,14 @@ RUN set -x \
          npm \
          openssh-client \
          patch \
-         py3-pip \
          python3 \
+         python3-pip \
          sed \
-    && apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community \
+         buildah \
+         fuse-overlayfs \
          skopeo \
-    && apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/testing \
-         trivy
+         trivy \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY bin/* /usr/local/bin/
 COPY share/* /usr/local/share/

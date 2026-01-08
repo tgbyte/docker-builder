@@ -3,7 +3,7 @@
 # shellcheck disable=SC1091
 source "$(dirname "$0")/../share/build-functions.sh"
 
-docker_login
+registry_login
 
 echo "Scanning ${FULL_IMAGE} for vulnerabilities..."
 

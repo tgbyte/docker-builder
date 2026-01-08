@@ -5,7 +5,7 @@ _BUILD_FUNCTIONS=yes
 
 echo "tgbyte/builder - Git commit $(cat /usr/local/etc/.builder-commit) @ $(cat /usr/local/etc/.builder-commit-date)"
 
-function docker_login {
+function registry_login {
   if [ ! -e .docker-logged-in ]; then
     if [ -n "$CI_REGISTRY_IMAGE" ]; then
       gitlab_login
@@ -18,7 +18,7 @@ function docker_login {
 function gitlab_login {
   if [ -n "$CI_REGISTRY_USER" ]; then
     echo "Detected GitLab Container registry - logging in using CI_REGISTRY_USER..."
-    echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+    echo "$CI_REGISTRY_PASSWORD" | buildah login --username "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
     if [ -n "$BUILD_HELM_CHART" ]; then
       helm registry login "${CI_REGISTRY}" \
         --username "$CI_REGISTRY_USER" \
@@ -27,7 +27,7 @@ function gitlab_login {
   else
     if [ -n "$CI_DEPLOY_USER" ]; then
       echo "Detected GitLab Container registry - logging in using CI_DEPLOY_USER..."
-      echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+      echo "$CI_REGISTRY_PASSWORD" | buildah login --username "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
       helm registry login "${CI_REGISTRY}" \
         --username "$CI_DEPLOY_USER" \
         --password "$CI_DEPLOY_PASSWORD"
@@ -43,7 +43,7 @@ function gitlab_login {
 function docker_hub_login {
   if [ -n "$DOCKER_HUB_USER" ]; then
     echo "Detected Docker Hub - logging in using DOCKER_HUB_USER..."
-    echo "$DOCKER_HUB_PASSWORD" | docker login -u "$DOCKER_HUB_USER" --password-stdin
+    echo "$DOCKER_HUB_PASSWORD" | buildah login --username "$DOCKER_HUB_USER" --password-stdin docker.io
     touch .docker-logged-in
   fi
 }
@@ -102,7 +102,20 @@ if [ -z "$TAG" ]; then
 fi
 
 if [ -z "$ARCH" ]; then
-  ARCH=$(docker version | grep OS/Arch | head -1 | sed s,.\*/,,)
+  if command -v buildah >/dev/null 2>&1; then
+    ARCH=$(buildah info --format '{{.host.arch}}' 2>/dev/null)
+  fi
+  if [ -z "$ARCH" ]; then
+    ARCH=$(uname -m)
+    case "$ARCH" in
+    x86_64)
+      ARCH="amd64"
+      ;;
+    aarch64)
+      ARCH="arm64"
+      ;;
+    esac
+  fi
 fi
 
 if [ -z "$PLATFORM" ]; then
@@ -113,7 +126,7 @@ if [ -z "$BUILD_DIR" ]; then
   BUILD_DIR="."
 fi
 
-if [ -z "$BUILD_DIR" ]; then
+if [ -z "$DOCKERFILE" ]; then
   DOCKERFILE="${BUILD_DIR}/Dockerfile"
 fi
 

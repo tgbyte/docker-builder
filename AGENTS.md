@@ -7,7 +7,7 @@
 - `templates/`: Reserved for future scaffolding; currently empty.
 
 ## Build, Test, and Development Commands
-- `bin/build-image.sh`: Build and optionally push a Docker image. Example: `TAG=1.2.3 IMAGE=org/app bin/build-image.sh`.
+- `bin/build-image.sh`: Build and optionally push a container image using Buildah. Example: `TAG=1.2.3 IMAGE=org/app bin/build-image.sh`.
 - `bin/build-manifest.sh`: Create/push a multi-arch manifest after per-arch builds. Requires `MULTIARCH=1`.
 - `bin/build-helm.sh`: Package and optionally push a Helm chart from `charts/<name>`.
 - `bin/add-tag.sh <tag...>`: Add extra tags to an existing image and push them.

@@ -12,6 +12,8 @@ set +e
 TRIVY_DB_REPOSITORY=public.ecr.aws/aquasecurity/trivy-db:2
 
 TRIVY_PARAMS=()
+TRIVY_PACKAGE_TYPES="${TRIVY_PKG_TYPES:-${TRIVY_VULN_TYPE}}"
+
 if [ -n "${TRIVY_SCANNERS}" ]; then
     TRIVY_PARAMS+=(--scanners)
     TRIVY_PARAMS+=("${TRIVY_SCANNERS}")
@@ -20,14 +22,22 @@ if [ -n "${TRIVY_SKIP_DIRS}" ]; then
     TRIVY_PARAMS+=(--skip-dirs)
     TRIVY_PARAMS+=("${TRIVY_SKIP_DIRS}")
 fi
-if [ -n "${TRIVY_VULN_TYPE}" ]; then
-    TRIVY_PARAMS+=(--vuln-type)
-    TRIVY_PARAMS+=("${TRIVY_VULN_TYPE}")
+if [ -n "${TRIVY_PKG_TYPES}" ] && [ -n "${TRIVY_VULN_TYPE}" ]; then
+    echo "TRIVY_VULN_TYPE is deprecated and ignored because TRIVY_PKG_TYPES is set."
+fi
+if [ -n "${TRIVY_VULN_TYPE}" ] && [ -z "${TRIVY_PKG_TYPES}" ]; then
+    echo "TRIVY_VULN_TYPE is deprecated; use TRIVY_PKG_TYPES instead."
+fi
+if [ -n "${TRIVY_PACKAGE_TYPES}" ]; then
+    TRIVY_PARAMS+=(--pkg-types)
+    TRIVY_PARAMS+=("${TRIVY_PACKAGE_TYPES}")
 fi
 if [ -n "${TRIVY_DB_REPOSITORY}" ]; then
     TRIVY_PARAMS+=(--db-repository)
     TRIVY_PARAMS+=("${TRIVY_DB_REPOSITORY}")
 fi
+
+unset TRIVY_VULN_TYPE
 
 trivy \
   --cache-dir .trivy \

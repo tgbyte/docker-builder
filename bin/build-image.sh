@@ -22,6 +22,8 @@ if [ -n "${DOCKER_SQUASH}" ]; then
   squash="--squash"
 fi
 
+harbor_rewrite_dockerfile
+
 echo "Building Docker image ${IMAGE_NAME}..."
 docker build --no-cache --pull --platform "${PLATFORM}" -t "${IMAGE_NAME}" -f "${DOCKERFILE}" ${squash} "${BUILD_ARGS[@]}" "${BUILD_DIR}"
 

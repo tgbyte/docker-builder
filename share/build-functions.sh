@@ -64,6 +64,30 @@ function build_log {
   fi
 }
 
+# Route FROM base images through the Harbor proxy-cache when HARBOR_REGISTRY
+# is set: rewrites each FROM in a processed copy of $DOCKERFILE (see
+# harbor-rewrite.awk for the registry->project routing) and repoints DOCKERFILE
+# at it. No-op when HARBOR_REGISTRY is empty.
+function harbor_rewrite_dockerfile {
+  [ -n "${HARBOR_REGISTRY:-}" ] || return 0
+
+  if [ ! -f "$DOCKERFILE" ]; then
+    build_log "HARBOR_REGISTRY set but Dockerfile '${DOCKERFILE}' not found - skipping Harbor rewrite"
+    return 0
+  fi
+
+  HARBOR_PROCESSED_DOCKERFILE="$(mktemp)"
+  # shellcheck disable=SC2064
+  trap "rm -f '${HARBOR_PROCESSED_DOCKERFILE}'" EXIT
+
+  awk -v harbor="${HARBOR_REGISTRY%/}" \
+    -f "$(dirname "${BASH_SOURCE[0]}")/harbor-rewrite.awk" \
+    "$DOCKERFILE" > "${HARBOR_PROCESSED_DOCKERFILE}"
+
+  DOCKERFILE="${HARBOR_PROCESSED_DOCKERFILE}"
+  build_log "Routing base images through Harbor proxy-cache at ${HARBOR_REGISTRY}"
+}
+
 if [ -z "$IMAGE" ]; then
   if [ -n "$CI_REGISTRY_IMAGE" ]; then
     IMAGE=${CI_REGISTRY_IMAGE}
@@ -113,7 +137,7 @@ if [ -z "$BUILD_DIR" ]; then
   BUILD_DIR="."
 fi
 
-if [ -z "$BUILD_DIR" ]; then
+if [ -z "$DOCKERFILE" ]; then
   DOCKERFILE="${BUILD_DIR}/Dockerfile"
 fi
 

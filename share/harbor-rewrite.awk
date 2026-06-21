@@ -4,8 +4,9 @@
 #
 # Each upstream registry is mapped to its Harbor proxy-cache project (the routing
 # below must match the proxy-cache projects configured in Harbor). Left untouched:
-# "scratch", references to earlier build stages, images containing a $variable,
-# images already pointing at <harbor>, and registries with no mapping.
+# "scratch", references to earlier build stages, images whose host/repo contains
+# a $variable (a $variable only in the :tag/@digest is still rewritten), images
+# already pointing at <harbor>, and registries with no mapping.
 
 BEGIN {
   # `harbor` is a Docker image-ref prefix (host[:port][/path]), so drop any URL
@@ -26,10 +27,17 @@ BEGIN {
   route["mcr.microsoft.com"]    = "microsoft"
 }
 
-function rewrite(img,    slash, first, rest, reg, repo) {
+function rewrite(img,    name, slash, first, rest, reg, repo) {
   if (img == "" || img == "scratch") return img
   if (img in stages) return img
-  if (img ~ /\$/) return img
+  # A $variable confined to the :tag or @digest is fine — we route on the
+  # host/repo and pass the tag/digest through verbatim (e.g.
+  # mcr.microsoft.com/playwright:v${VER}). Only bail when the host/repo itself
+  # is dynamic, since then the upstream registry can't be determined.
+  name = img
+  sub(/@[^\/]*$/, "", name)   # drop @digest
+  sub(/:[^\/]*$/, "", name)   # drop :tag (a colon in the final path segment)
+  if (name ~ /\$/) return img
   if (index(img, harbor "/") == 1) return img
   slash = index(img, "/")
   first = (slash > 0) ? substr(img, 1, slash - 1) : ""

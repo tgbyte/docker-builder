@@ -1,11 +1,17 @@
-ARG DOCKER_VERSION
+ARG BUILDKIT_VERSION=v0.31.0
 
-FROM docker:${DOCKER_VERSION:-latest}
+# renovate: datasource=docker depName=moby/buildkit versioning=docker
+FROM moby/buildkit:${BUILDKIT_VERSION}-rootless
 
 ARG GIT_COMMIT
 ARG GIT_COMMIT_DATE
 
 ENV LANG=C.UTF-8
+
+# Reset the buildkitd entrypoint so GitLab CI can inject its shell script.
+ENTRYPOINT []
+
+USER root
 RUN set -x \
     && apk upgrade --no-cache \
     && apk add --no-cache \
@@ -37,3 +43,5 @@ RUN set -x \
     && mkdir -p /usr/local/etc \
     && echo $GIT_COMMIT > /usr/local/etc/.builder-commit \
     && echo $GIT_COMMIT_DATE > /usr/local/etc/.builder-commit-date
+
+USER 1000

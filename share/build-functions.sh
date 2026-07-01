@@ -5,45 +5,65 @@ _BUILD_FUNCTIONS=yes
 
 echo "tgbyte/builder - Git commit $(cat /usr/local/etc/.builder-commit) @ $(cat /usr/local/etc/.builder-commit-date)"
 
-function docker_login {
-  if [ ! -e .docker-logged-in ]; then
-    if [ -n "$CI_REGISTRY_IMAGE" ]; then
-      gitlab_login
-    else
-      docker_hub_login
-    fi
+function registry_auth {
+  if [ -e .docker-logged-in ]; then
+    return 0
+  fi
+
+  DOCKER_CONFIG="${DOCKER_CONFIG:-$HOME/.docker}"
+  REGISTRY_AUTH_FILE="${DOCKER_CONFIG}/config.json"
+  export DOCKER_CONFIG REGISTRY_AUTH_FILE
+  mkdir -p "${DOCKER_CONFIG}"
+
+  if [ -n "$CI_REGISTRY_IMAGE" ]; then
+    registry_auth_gitlab
+  else
+    registry_auth_docker_hub
   fi
 }
 
-function gitlab_login {
+# write_auth <registry-host> <username> <password>
+function write_auth {
+  local reg="$1" user="$2" pass="$3"
+  local cfg="${REGISTRY_AUTH_FILE}"
+  local token
+  token=$(printf '%s:%s' "$user" "$pass" | base64 | tr -d '\n')
+  if [ -s "$cfg" ]; then
+    jq --arg reg "$reg" --arg auth "$token" \
+      '.auths[$reg] = {auth: $auth}' "$cfg" > "${cfg}.tmp"
+  else
+    jq -n --arg reg "$reg" --arg auth "$token" \
+      '{auths: {($reg): {auth: $auth}}}' > "${cfg}.tmp"
+  fi
+  mv "${cfg}.tmp" "$cfg"
+}
+
+function registry_auth_gitlab {
   if [ -n "$CI_REGISTRY_USER" ]; then
-    echo "Detected GitLab Container registry - logging in using CI_REGISTRY_USER..."
-    echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+    echo "Detected GitLab Container registry - writing auth for CI_REGISTRY_USER..."
+    write_auth "$CI_REGISTRY" "$CI_REGISTRY_USER" "$CI_REGISTRY_PASSWORD"
     if [ -n "$BUILD_HELM_CHART" ]; then
-      helm registry login "${CI_REGISTRY}" \
+      helm registry login "$CI_REGISTRY" \
         --username "$CI_REGISTRY_USER" \
         --password "$CI_REGISTRY_PASSWORD"
     fi
+  elif [ -n "$CI_DEPLOY_USER" ]; then
+    echo "Detected GitLab Container registry - writing auth for CI_DEPLOY_USER..."
+    write_auth "$CI_REGISTRY" "$CI_DEPLOY_USER" "$CI_DEPLOY_PASSWORD"
+    helm registry login "$CI_REGISTRY" \
+      --username "$CI_DEPLOY_USER" \
+      --password "$CI_DEPLOY_PASSWORD"
   else
-    if [ -n "$CI_DEPLOY_USER" ]; then
-      echo "Detected GitLab Container registry - logging in using CI_DEPLOY_USER..."
-      echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
-      helm registry login "${CI_REGISTRY}" \
-        --username "$CI_DEPLOY_USER" \
-        --password "$CI_DEPLOY_PASSWORD"
-    else
-      echo "No credentials defined to login to GitLab Container Registry. See https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#authenticating-to-the-container-registry for options."
-      exit 1
-    fi
+    echo "No credentials defined to login to GitLab Container Registry. See https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#authenticating-to-the-container-registry for options."
+    exit 1
   fi
-
   touch .docker-logged-in
 }
 
-function docker_hub_login {
+function registry_auth_docker_hub {
   if [ -n "$DOCKER_HUB_USER" ]; then
-    echo "Detected Docker Hub - logging in using DOCKER_HUB_USER..."
-    echo "$DOCKER_HUB_PASSWORD" | docker login -u "$DOCKER_HUB_USER" --password-stdin
+    echo "Detected Docker Hub - writing auth for DOCKER_HUB_USER..."
+    write_auth "https://index.docker.io/v1/" "$DOCKER_HUB_USER" "$DOCKER_HUB_PASSWORD"
     touch .docker-logged-in
   fi
 }
@@ -125,12 +145,12 @@ if [ -z "$TAG" ]; then
   fi
 fi
 
-if [ -z "$ARCH" ]; then
-  ARCH=$(docker version | grep OS/Arch | head -1 | sed s,.\*/,,)
-fi
-
-if [ -z "$PLATFORM" ]; then
-  PLATFORM=${ARCH}
+if [ -z "$PLATFORMS" ]; then
+  if [ "$MULTIARCH" == "1" ]; then
+    PLATFORMS="linux/amd64,linux/arm64"
+  else
+    PLATFORMS="linux/amd64"
+  fi
 fi
 
 if [ -z "$BUILD_DIR" ]; then
@@ -154,8 +174,6 @@ if [ -d "$HELM_CHART_DIR" ]; then
 fi
 
 # shellcheck disable=SC2034
-FULL_IMAGE_ARCH="$IMAGE":"$TAG"-"$ARCH"
-# shellcheck disable=SC2034
 FULL_IMAGE="$IMAGE":"$TAG"
 # shellcheck disable=SC2034
 HELM_CHART_IMAGE="oci://${IMAGE}/helm"
@@ -165,10 +183,10 @@ ARG_GIT_COMMIT=$(git rev-parse --short HEAD)
 # shellcheck disable=SC2034
 ARG_GIT_COMMIT_DATE=$(git show -s --format=%cd)
 
-declare -a BUILD_ARGS
+declare -a BUILD_OPTS
 while IFS='=' read -r -d '' n v; do
-    BUILD_ARGS+=("--build-arg")
-    BUILD_ARGS+=("$n=$v")
+    BUILD_OPTS+=("--opt")
+    BUILD_OPTS+=("build-arg:$n=$v")
 done < <(env -0 | grep -z '^ARG_' | sed -rze 's/^ARG_//')
 
 if [ ! -e .trivy-run ]; then
@@ -188,8 +206,8 @@ if [ -z "${QUIET}" ]; then
   echo "============================"
   echo "IMAGE: $IMAGE"
   echo "TAG: $TAG"
-  echo "ARCH: $ARCH"
-  echo BUILD_ARGS: "${BUILD_ARGS[@]}"
+  echo "PLATFORMS: $PLATFORMS"
+  echo BUILD_OPTS: "${BUILD_OPTS[@]}"
   echo "BUILD_DIR: $BUILD_DIR"
   echo "DOCKERFILE: $DOCKERFILE"
   echo "FORCE: $FORCE"

@@ -65,18 +65,25 @@ remote builder is deferred until warm cross-pipeline caching is a goal.
 ### 1. Image (`Dockerfile`)
 
 - **Change the base** from `FROM docker:${DOCKER_VERSION}` (which bundles the
-  daemon/CLI we are removing) to **`FROM moby/buildkit:v0.31.0-rootless`**. It is
-  Alpine-based and already ships `buildkitd`, `buildctl`,
-  `buildctl-daemonless.sh`, `rootlesskit`, `fuse-overlayfs`, and the matched
-  rootless plumbing (non-root `user` uid/gid 1000, `/etc/subuid`, `/etc/subgid`,
-  `XDG_RUNTIME_DIR`). This collapses the BuildKit version pin into the single base
-  tag and removes the risk of hand-rolled rootless setup drifting from the
-  buildkitd binary.
+  daemon/CLI we are removing) to a pinned, Alpine-based **`moby/buildkit`**
+  rootless image, referenced via a build-arg (mirrors the existing
+  `DOCKER_VERSION` idiom, keeps it overridable, and is the anchor Renovate bumps —
+  see §1a):
+  ```dockerfile
+  ARG BUILDKIT_VERSION=v0.31.0
+  # renovate: datasource=docker depName=moby/buildkit versioning=docker
+  FROM moby/buildkit:${BUILDKIT_VERSION}-rootless
+  ```
+  It already ships `buildkitd`, `buildctl`, `buildctl-daemonless.sh`,
+  `rootlesskit`, `fuse-overlayfs`, and the matched rootless plumbing (non-root
+  `user` uid/gid 1000, `/etc/subuid`, `/etc/subgid`, `XDG_RUNTIME_DIR`). This
+  removes the risk of hand-rolled rootless setup drifting from the buildkitd
+  binary.
 - Install the existing tooling on top via `apk` (as root, then return to the
   non-root user): the same set as today — bash, coreutils, curl, git, grep, helm,
   httpie, jq, make, nodejs, npm, openssh-client, patch, py3-pip, python3, sed,
   skopeo, trivy.
-- Drop the `DOCKER_VERSION` build-arg (the base tag carries the version). Keep
+- **Replace** the `DOCKER_VERSION` build-arg with `BUILDKIT_VERSION` (above). Keep
   `GIT_COMMIT` / `GIT_COMMIT_DATE` args and the `.builder-commit*` markers.
 - **Consequence:** the whole `tgbyte/builder` image now runs as uid 1000 by
   default, so non-build jobs (trivy, helm, tag) also run rootless. Acceptable —
@@ -87,6 +94,31 @@ BuildKit binaries, hand-rolling the rootless user / subuid / fuse-overlayfs setu
 Rejected as the default because it duplicates upstream plumbing that can drift
 from the binary; retained as a fallback if root-by-default for non-build jobs is
 later required.
+
+### 1a. Base-image maintenance (updates)
+
+Updates arrive through two independent channels:
+
+- **OS + apk tooling** (Alpine base packages, helm, trivy, skopeo, node, git, …):
+  refreshed on **every rebuild** via `apk upgrade --no-cache` + `apk add` pulling
+  current versions — unchanged from today. The existing scheduled-pipeline →
+  `trivy` scan → forced-rebuild loop drives this automatically. This is the bulk
+  of the CVE surface.
+- **The buildkit binaries / base tag** (`v0.31.0-rootless`, immutable): do **not**
+  update on their own. `--pull` re-fetches the same digest, and the
+  trivy-forced-rebuild loop cannot clear a `buildkitd` CVE (a rebuild pulls the
+  same version). Bumps therefore come from **Renovate**.
+
+**Renovate (new `renovate.json` in this repo):** because the version lives in an
+`ARG` and the `-rootless` suffix sits *outside* the variable, Renovate's default
+Dockerfile manager can't associate it. Use the `# renovate:` annotation shown in
+§1 together with a `customManager` (regex) that matches
+`ARG BUILDKIT_VERSION=(?<currentValue>.*)`, with `datasource=docker`,
+`depName=moby/buildkit`, `versioning=docker`. Renovate then opens MRs to bump
+`v0.31.0` → `v0.31.1` / `v0.32.0` (within the `-rootless` compatibility suffix).
+Optionally enable digest pinning for full reproducibility. Renovate onboarding /
+runner scheduling on `gitlab.tgbyte.de` is an operational prerequisite, not a code
+change here.
 
 ### 2. Runner config (`config.toml`) — scoped to build jobs only
 

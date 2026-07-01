@@ -110,9 +110,10 @@ arm64 runners.
 
 **`share/build-functions.sh`**
 - Replace `docker_login` with `registry_auth`: write `$DOCKER_CONFIG/config.json`
-  containing auths for the push registry (GitLab or Docker Hub) **and** the Harbor
-  registry (see §7). Keep the existing `helm registry login`. Preserve the
-  `.docker-logged-in` idempotency guard.
+  containing auths for the **push** registry (GitLab or Docker Hub). Harbor
+  proxy-cache pulls are anonymous, so no Harbor entry is needed (see §7). Keep the
+  existing `helm registry login`. Preserve the `.docker-logged-in` idempotency
+  guard.
 - Replace `ARCH=$(docker version | grep OS/Arch …)` (no daemon) with a
   configurable `PLATFORMS` variable (default `linux/amd64,linux/arm64`, reduced to
   a single platform when `MULTIARCH != 1`).
@@ -156,15 +157,17 @@ arm64 runners.
   auto-created. Optionally keep a single manifest-list digest written from
   `--metadata-file` (`containerimage.digest`) for downstream consumers.
 
-### 7. Registry auth & Harbor pull (verify during implementation)
+### 7. Registry auth & Harbor pull
 
-With no daemon, auth is a hand-written `config.json` (`$DOCKER_CONFIG`). The fresh
-rootless `buildkitd` needs credentials to **pull base images through the Harbor
-proxy-cache** — something that "just worked" under the host daemon and must now be
-made explicit. During implementation, confirm whether the Harbor proxy-cache
-currently pulls **anonymously** or via node `imagePullSecrets`, and:
-- add Harbor robot-account creds to `config.json` if auth is required, and
-- mount/trust the Harbor **CA** in the build job if Harbor uses a private CA.
+With no daemon, auth is a hand-written `config.json` (`$DOCKER_CONFIG`). Auth is
+required for **push**, not pull: the Harbor proxy-cache serves base-image pulls
+**anonymously**, so `config.json` needs only the push-registry credentials
+(GitLab or Docker Hub) and no Harbor entry.
+
+Residual (minor): if the Harbor host uses a private CA, the fresh rootless
+`buildkitd` must trust it (mount the CA into the build job). This is unlikely
+given base-image pulls already succeed today; treat as a verification step, not a
+blocker.
 
 ## Testing / verification strategy
 
@@ -189,5 +192,5 @@ currently pulls **anonymously** or via node `imagePullSecrets`, and:
 ## Open questions
 
 1. Exact `moby/buildkit` version to pin.
-2. Harbor proxy-cache auth model (anonymous vs. robot account) and private-CA
-   trust — resolve before the build job can pull base images.
+2. ~~Harbor proxy-cache auth model~~ — **resolved:** pulls are anonymous; no
+   Harbor creds needed. Private-CA trust remains a minor verification step (§7).

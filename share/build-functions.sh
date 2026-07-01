@@ -7,6 +7,7 @@ echo "tgbyte/builder - Git commit $(cat /usr/local/etc/.builder-commit) @ $(cat 
 
 function registry_auth {
   if [ -e .docker-logged-in ]; then
+    # First call (per job) creates+exports DOCKER_CONFIG/REGISTRY_AUTH_FILE; children inherit them.
     return 0
   fi
 

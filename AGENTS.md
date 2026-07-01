@@ -1,10 +1,10 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `bin/`: Bash entrypoints for build, tagging, manifest, and security scan workflows.
+- `bin/`: Bash entrypoints for build, tagging, and security scan workflows.
 - `share/build-functions.sh`: Shared helpers and environment discovery used by all scripts.
-- `Dockerfile`: Image definition for the builder container (installs tooling like docker, helm, trivy).
-- `templates/`: Reserved for future scaffolding; currently empty.
+- `Dockerfile`: Image definition for the builder container (installs tooling like buildkit, helm, trivy).
+- `templates/`: Reusable GitLab CI pipeline (`.gitlab-ci.yml`) included by downstream projects.
 
 ## Build, Test, and Development Commands
 - `bin/build-image.sh`: Build and optionally push a Docker image. With `MULTIARCH=1` (the default in CI) it performs a single multi-platform build+push via rootless BuildKit and produces the manifest list directly. Example: `TAG=1.2.3 IMAGE=org/app bin/build-image.sh`.

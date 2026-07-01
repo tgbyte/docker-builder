@@ -6,7 +6,6 @@ include:
 
 variables:
   BUILD_IMAGE_SCRIPT: bin/build-image.sh
-  BUILD_MANIFEST_SCRIPT: bin/build-manifest.sh
   MULTIARCH: 1
   TRIVY_SCRIPT: bin/trivy.sh
   TRIVY_SEVERITY: CRITICAL

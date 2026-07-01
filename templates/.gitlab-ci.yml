@@ -4,8 +4,7 @@ cache:
 
 stages:
   - scan
-  - build-image
-  - build-manifest
+  - build
   - verify
 
 trivy:
@@ -23,10 +22,12 @@ trivy:
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "push"
 
-.build-image-template: &build-image
-  stage: build-image
+build:
+  stage: build
   script:
     - ${BUILD_IMAGE_SCRIPT:-build-image.sh}
+  variables:
+    BUILDKITD_FLAGS: --oci-worker-no-process-sandbox
   artifacts:
     expire_in: 1 day
     paths:
@@ -39,29 +40,7 @@ trivy:
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
-build-amd64:
-  <<: *build-image
-
-build-arm64:
-  <<: *build-image
-  rules:
-    - if: $MULTIARCH == "1"
-  variables:
-    ARCH: arm64
-
-build-manifest:
-  stage: build-manifest
-  script:
-    - ${BUILD_MANIFEST_SCRIPT:-build-manifest.sh}
-  needs:
-    - job: trivy
-      optional: true
-    - job: build-amd64
-    - job: build-arm64
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $MULTIARCH == "1"
-
-.trivy-result-template: &trivy-result
+trivy-result:
   stage: verify
   script:
     - ${TRIVY_SCRIPT:-trivy.sh}
@@ -73,25 +52,12 @@ build-manifest:
   needs:
     - job: trivy
       optional: true
-    - job: build-amd64
+    - job: build
   variables:
     TRIVY_DISABLE_VEX_NOTICE: 1
     TRIVY_REPORT_JSON: 1
-
-trivy-result:
-  <<: *trivy-result
   rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $MULTIARCH != "1" && $SKIP_TRIVY != "1"
-
-trivy-result-multiarch:
-  <<: *trivy-result
-  needs:
-    - !reference [.trivy-result-template, needs]
-    - job: build-arm64
-    - job: build-manifest
-      artifacts: false
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $MULTIARCH == "1" && $SKIP_TRIVY != "1"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $SKIP_TRIVY != "1"
 
 variables:
   TRIVY_DISABLE_VEX_NOTICE: '1'

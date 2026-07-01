@@ -7,8 +7,7 @@
 - `templates/`: Reserved for future scaffolding; currently empty.
 
 ## Build, Test, and Development Commands
-- `bin/build-image.sh`: Build and optionally push a Docker image. Example: `TAG=1.2.3 IMAGE=org/app bin/build-image.sh`.
-- `bin/build-manifest.sh`: Create/push a multi-arch manifest after per-arch builds. Requires `MULTIARCH=1`.
+- `bin/build-image.sh`: Build and optionally push a Docker image. With `MULTIARCH=1` (the default in CI) it performs a single multi-platform build+push via rootless BuildKit and produces the manifest list directly. Example: `TAG=1.2.3 IMAGE=org/app bin/build-image.sh`.
 - `bin/build-helm.sh`: Package and optionally push a Helm chart from `charts/<name>`.
 - `bin/add-tag.sh <tag...>`: Add extra tags to an existing image and push them.
 - `bin/check-tag.sh <image:tag>`: Exit success if the tag exists in the registry.
@@ -30,3 +29,4 @@
 
 ## Security & Configuration Tips
 - Registry credentials are expected via env vars (`DOCKER_HUB_USER`, `CI_REGISTRY_USER`, etc.); do not hardcode secrets.
+- Builds run rootless (no `--privileged`); registry auth is written to `config.json` by `registry_auth`.

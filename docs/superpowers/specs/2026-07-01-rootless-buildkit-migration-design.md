@@ -64,15 +64,29 @@ remote builder is deferred until warm cross-pipeline caching is a goal.
 
 ### 1. Image (`Dockerfile`)
 
-- Multi-stage `COPY` the BuildKit binaries — `buildctl`, `buildkitd`,
-  `buildctl-daemonless.sh` (and `rootlesskit`) — from a **pinned**
-  `moby/buildkit:vX.Y.Z-rootless` stage. Pin the version explicitly; do not track
-  `latest`.
-- Add rootless runtime deps: `fuse-overlayfs`, `shadow-uidmap`. Configure
-  `/etc/subuid` and `/etc/subgid` ranges for a dedicated non-root build user; the
-  image runs as that UID.
-- Retain all existing tooling (helm, trivy, skopeo, git, awk, jq, node) — the
-  build job still runs in this image.
+- **Change the base** from `FROM docker:${DOCKER_VERSION}` (which bundles the
+  daemon/CLI we are removing) to **`FROM moby/buildkit:v0.31.0-rootless`**. It is
+  Alpine-based and already ships `buildkitd`, `buildctl`,
+  `buildctl-daemonless.sh`, `rootlesskit`, `fuse-overlayfs`, and the matched
+  rootless plumbing (non-root `user` uid/gid 1000, `/etc/subuid`, `/etc/subgid`,
+  `XDG_RUNTIME_DIR`). This collapses the BuildKit version pin into the single base
+  tag and removes the risk of hand-rolled rootless setup drifting from the
+  buildkitd binary.
+- Install the existing tooling on top via `apk` (as root, then return to the
+  non-root user): the same set as today — bash, coreutils, curl, git, grep, helm,
+  httpie, jq, make, nodejs, npm, openssh-client, patch, py3-pip, python3, sed,
+  skopeo, trivy.
+- Drop the `DOCKER_VERSION` build-arg (the base tag carries the version). Keep
+  `GIT_COMMIT` / `GIT_COMMIT_DATE` args and the `.builder-commit*` markers.
+- **Consequence:** the whole `tgbyte/builder` image now runs as uid 1000 by
+  default, so non-build jobs (trivy, helm, tag) also run rootless. Acceptable —
+  none require root.
+
+**Alternative considered:** keep an `alpine` base and multi-stage `COPY` the
+BuildKit binaries, hand-rolling the rootless user / subuid / fuse-overlayfs setup.
+Rejected as the default because it duplicates upstream plumbing that can drift
+from the binary; retained as a fallback if root-by-default for non-build jobs is
+later required.
 
 ### 2. Runner config (`config.toml`) — scoped to build jobs only
 
@@ -191,6 +205,8 @@ blocker.
 
 ## Open questions
 
-1. Exact `moby/buildkit` version to pin.
+1. ~~Exact `moby/buildkit` version to pin~~ — **resolved:** base on
+   `moby/buildkit:v0.31.0-rootless` (§1); bump if a newer stable lands before
+   implementation.
 2. ~~Harbor proxy-cache auth model~~ — **resolved:** pulls are anonymous; no
    Harbor creds needed. Private-CA trust remains a minor verification step (§7).

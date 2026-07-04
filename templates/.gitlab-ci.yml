@@ -9,6 +9,7 @@ stages:
 
 trivy:
   stage: scan
+  tags: [buildkit]
   script:
     - ${TRIVY_SCRIPT:-trivy.sh}
   allow_failure: true
@@ -24,6 +25,7 @@ trivy:
 
 build:
   stage: build
+  tags: [buildkit]
   script:
     - ${BUILD_IMAGE_SCRIPT:-build-image.sh}
   variables:
@@ -42,6 +44,7 @@ build:
 
 trivy-result:
   stage: verify
+  tags: [buildkit]
   script:
     - ${TRIVY_SCRIPT:-trivy.sh}
   artifacts:

@@ -204,3 +204,19 @@ Bring up binfmt + a parallel rootless runner + a hand-built rootless image
 3–4), flip the fleet by merging to main with instant revert available (step 5),
 and only then retire DinD (step 6). There is never a moment where neither path
 works.
+
+## Follow-ups (post-cutover, optional)
+
+- **Shrink the builder image (~−260 MB).** `tgbyte/builder` is ~1.13 GB; the
+  measured weight is trivy (259 MB), the fixed buildkit base (~250 MB), helm
+  (80 MB), python3/pip/httpie (~75 MB), node/npm (~66 MB), skopeo (28 MB).
+  Biggest clean lever: **trivy is used only by the `trivy`/`trivy-result`
+  stages** — move those to a dedicated `aquasec/trivy` image (a template change,
+  transparent to consumers) → builder ~870 MB. Requires making `trivy.sh`
+  self-contained: it currently `source`s `build-functions.sh` (bash/jq/git) that
+  the lean trivy image lacks. Do NOT drop node/npm — audited consumers (bahn-ui,
+  coach-sequence-fetcher, and `.gitlab-ci/*.sh`) run `npm`. python3/pip/make/
+  httpie (~75 MB) showed no usage in the sampled repos but need a full
+  gitlab.tgbyte.de audit before removal. Low urgency: `pull_policy=if-not-present`
+  + digest pin means the image is pulled once per node and cached, so size mainly
+  affects cold nodes / scale-up.

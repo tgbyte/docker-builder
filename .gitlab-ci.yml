@@ -4,6 +4,9 @@
 include:
   - project: 'docker/builder'
     file: '/templates/.gitlab-ci.yml'
+    # Self-reference the current branch so template changes are exercised by this
+    # repo's own pipeline before they reach main (consumers stay ref-less on main).
+    ref: $CI_COMMIT_REF_NAME
 
 variables:
   BUILD_IMAGE_SCRIPT: bin/build-image.sh

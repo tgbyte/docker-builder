@@ -1,12 +1,12 @@
-image: tgbyte/builder
-
+# No top-level image: template jobs use the runner's default image. On the
+# rootless buildkit runner that is the pinned rootless tgbyte/builder, so this
+# repo self-builds on the new path like every other consumer.
 include:
   - project: 'docker/builder'
     file: '/templates/.gitlab-ci.yml'
 
 variables:
   BUILD_IMAGE_SCRIPT: bin/build-image.sh
-  BUILD_MANIFEST_SCRIPT: bin/build-manifest.sh
   MULTIARCH: 1
   TRIVY_SCRIPT: bin/trivy.sh
   TRIVY_SEVERITY: CRITICAL

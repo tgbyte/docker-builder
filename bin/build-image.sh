@@ -3,41 +3,37 @@
 # shellcheck disable=SC1091
 source "$(dirname "$0")/../share/build-functions.sh"
 
-if [ -z "${MULTIARCH}" ]; then
-  IMAGE_NAME=${FULL_IMAGE}
-else
-  IMAGE_NAME=${FULL_IMAGE_ARCH}
-fi
-
-docker_login
+registry_auth
 exit_if_image_present
-
-if [ -n "${MULTIARCH}" ] && [ "${ARCH}" != "" ] && [ "${ARCH}" != "amd64" ]; then
-  set +e
-  docker run --privileged --rm tonistiigi/binfmt --install "${ARCH}"
-  set -e
-fi
-
-if [ -n "${DOCKER_SQUASH}" ]; then
-  squash="--squash"
-fi
 
 harbor_rewrite_dockerfile
 
-echo "Building Docker image ${IMAGE_NAME}..."
-docker build --no-cache --pull --platform "${PLATFORM}" -t "${IMAGE_NAME}" -f "${DOCKERFILE}" ${squash} "${BUILD_ARGS[@]}" "${BUILD_DIR}"
+DOCKERFILE_DIR="$(dirname "${DOCKERFILE}")"
+DOCKERFILE_NAME="$(basename "${DOCKERFILE}")"
+
+OUTPUT="type=image,name=${FULL_IMAGE}"
+if [ -z "${SKIP_DOCKER_PUSH}" ]; then
+  OUTPUT="${OUTPUT},push=true"
+fi
 
 mkdir -p results
 
-if [ -z "${SKIP_DOCKER_PUSH}" ]; then
-  echo "Pushing Docker image ${IMAGE_NAME}..."
-  docker push "${IMAGE_NAME}"
+echo "Building image ${FULL_IMAGE} for platforms ${PLATFORMS}..."
+buildctl-daemonless.sh build \
+  --frontend dockerfile.v0 \
+  --local context="${BUILD_DIR}" \
+  --local dockerfile="${DOCKERFILE_DIR}" \
+  --opt filename="${DOCKERFILE_NAME}" \
+  --opt platform="${PLATFORMS}" \
+  "${BUILD_OPTS[@]}" \
+  --output "${OUTPUT}" \
+  --metadata-file results/metadata.json
 
-  if [ -n "${MULTIARCH}" ]; then
-    FULL_IMAGE_ARCH_SHA=$(docker inspect --format='{{ index .RepoDigests 0 }}' "${IMAGE_NAME}")
-    mkdir -p "${BUILD_DIR}/results"
-    echo "${FULL_IMAGE_ARCH_SHA}" > "${BUILD_DIR}/results/${ARCH}"
-  fi
+if [ -n "${SKIP_DOCKER_PUSH}" ]; then
+  echo "SKIP_DOCKER_PUSH set - image built but not pushed."
+else
+  DIGEST=$(jq -r '."containerimage.digest" // empty' results/metadata.json)
+  echo "Pushed ${FULL_IMAGE}@${DIGEST}"
 fi
 
 if [ -n "$BUILD_HELM_CHART" ]; then

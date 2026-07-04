@@ -1,13 +1,25 @@
-image: tgbyte/builder
-
+# tgbyte/builder:dind — the legacy Docker-in-Docker builder image.
+#
+# The IMAGE is FROM docker:* and ships the classic `docker build` scripts in
+# bin/ + share/ that legacy DinD runners (on the other GitLab instance) pull and
+# run. It is BUILT with the rootless buildkit toolchain from main's template:
+#   - no top-level image  -> the buildkit runner's rootless image builds it
+#   - no BUILD_IMAGE_SCRIPT override -> that image's buildctl build-image.sh
+#     builds this branch's ./Dockerfile (a FROM docker:* Dockerfile builds fine
+#     under buildctl; no DinD runner needed)
+# Publishes tgbyte/builder:dind.
 include:
   - project: 'docker/builder'
     file: '/templates/.gitlab-ci.yml'
 
 variables:
-  BUILD_IMAGE_SCRIPT: bin/build-image.sh
-  BUILD_MANIFEST_SCRIPT: bin/build-manifest.sh
   MULTIARCH: 1
-  TRIVY_SCRIPT: bin/trivy.sh
-  TRIVY_SEVERITY: CRITICAL
+  TAG: dind
   SKIP_TRIVY: 1
+
+# main's template gates jobs to the default branch; re-open the build job for
+# this maintenance branch and its scheduled rebuilds (apk upgrade -> CVE patches).
+build:
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dind"
+    - if: $CI_PIPELINE_SOURCE == "schedule"

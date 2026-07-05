@@ -3,7 +3,7 @@
 [[ "${_BUILD_FUNCTIONS:-""}" == "yes" ]] && return 0
 _BUILD_FUNCTIONS=yes
 
-echo "tgbyte/builder - Git commit $(cat /usr/local/etc/.builder-commit) @ $(cat /usr/local/etc/.builder-commit-date)"
+echo "tgbyte/builder:$(cat /usr/local/etc/.builder-tag 2>/dev/null) - Git commit $(cat /usr/local/etc/.builder-commit) @ $(cat /usr/local/etc/.builder-commit-date)"
 
 function registry_auth {
   if [ -e .docker-logged-in ]; then
@@ -189,6 +189,8 @@ HELM_CHART_IMAGE="oci://${IMAGE}/helm"
 # aborting the build.
 export ARG_GIT_COMMIT="${CI_COMMIT_SHORT_SHA:-$(git rev-parse --short HEAD 2>/dev/null || true)}"
 export ARG_GIT_COMMIT_DATE="${CI_COMMIT_TIMESTAMP:-$(git show -s --format=%cd 2>/dev/null || true)}"
+# The tag this image is being built as, baked in so the banner can report it.
+export ARG_BUILDER_TAG="$TAG"
 
 declare -a BUILD_OPTS
 while IFS='=' read -r -d '' n v; do

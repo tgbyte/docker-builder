@@ -189,8 +189,6 @@ HELM_CHART_IMAGE="oci://${IMAGE}/helm"
 # aborting the build.
 export ARG_GIT_COMMIT="${CI_COMMIT_SHORT_SHA:-$(git rev-parse --short HEAD 2>/dev/null || true)}"
 export ARG_GIT_COMMIT_DATE="${CI_COMMIT_TIMESTAMP:-$(git show -s --format=%cd 2>/dev/null || true)}"
-# The tag this image is being built as, baked in so the banner can report it.
-export ARG_BUILDER_TAG="$TAG"
 
 declare -a BUILD_OPTS
 while IFS='=' read -r -d '' n v; do

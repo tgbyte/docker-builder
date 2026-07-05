@@ -14,5 +14,8 @@ exit_if_image_present
 
 export ARG_BUILDKIT_VERSION="${VERSION}"
 export TAG=latest
+# Bake the published tag into the image banner (Dockerfile writes .builder-tag,
+# read by build-functions.sh). Set here, after TAG, so it reflects `latest`.
+export ARG_BUILDER_TAG="${TAG}"
 
 "${DIR}"/../bin/build-image.sh

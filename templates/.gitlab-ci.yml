@@ -9,7 +9,7 @@ stages:
 
 trivy:
   stage: scan
-  tags: [buildkit]
+  tags: [rootless]
   script:
     - ${TRIVY_SCRIPT:-trivy.sh}
   allow_failure: true
@@ -25,7 +25,7 @@ trivy:
 
 build:
   stage: build
-  tags: [buildkit]
+  tags: [rootless]
   script:
     - ${BUILD_IMAGE_SCRIPT:-build-image.sh}
   variables:
@@ -44,7 +44,7 @@ build:
 
 trivy-result:
   stage: verify
-  tags: [buildkit]
+  tags: [rootless]
   script:
     - ${TRIVY_SCRIPT:-trivy.sh}
   artifacts:

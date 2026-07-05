@@ -27,6 +27,12 @@
 - PRs should include: purpose, affected scripts, and any required environment variables.
 - If a change impacts build output, mention the exact command used and key flags.
 
+## Harbor Proxy-Cache Routing
+- Set `HARBOR_REGISTRY` (e.g. `harbor.tgbyte.io`) to route external image/DB pulls through Harbor proxy-cache projects, avoiding upstream rate limits and outages. Unset is a no-op (pull direct from upstream). The rootless CI runner sets it automatically.
+- **Base images:** `harbor_rewrite_dockerfile` (`share/build-functions.sh`) rewrites `FROM` lines via `share/harbor-rewrite.awk`, mapping each upstream registry to its proxy-cache project (`docker.io→dockerhub`, `ghcr.io→ghcr`, `quay.io→quay`, `registry.k8s.io→k8s`, …). Left untouched: `scratch`, prior build stages, refs already on `HARBOR_REGISTRY`, dynamic (`$var`) hosts, and unmapped registries.
+- **Trivy DB:** `bin/trivy.sh` routes the vulnerability DB and Java DB through the `ghcr` proxy-cache project (`${HARBOR_REGISTRY}/ghcr/aquasecurity/trivy-db:2` and `trivy-java-db:1`) when `HARBOR_REGISTRY` is set; otherwise the vuln DB falls back to the `public.ecr.aws` mirror and the Java DB to trivy's default. An explicit `TRIVY_DB_REPOSITORY` / `TRIVY_JAVA_DB_REPOSITORY` overrides both.
+- The route map must match the proxy-cache projects actually configured in Harbor; the Trivy DBs are OCI artifacts pulled anonymously.
+
 ## Security & Configuration Tips
 - Registry credentials are expected via env vars (`DOCKER_HUB_USER`, `CI_REGISTRY_USER`, etc.); do not hardcode secrets.
 - Builds run rootless (no `--privileged`); registry auth is written to `config.json` by `registry_auth`.

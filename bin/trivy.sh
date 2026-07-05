@@ -9,7 +9,22 @@ echo "Scanning ${FULL_IMAGE} for vulnerabilities..."
 
 set +e
 
-TRIVY_DB_REPOSITORY=public.ecr.aws/aquasecurity/trivy-db:2
+# Vulnerability + Java DB sources. Route through the Harbor proxy-cache when
+# configured — reuses the `ghcr` proxy-cache project (both DBs' canonical
+# upstream is ghcr.io/aquasecurity), so Harbor caches them once and every scan
+# pulls locally, dodging ghcr.io's trivy-db pull rate limits. Falls back to the
+# public ECR mirror for the vuln DB (and trivy's ghcr.io default for the Java
+# DB) when Harbor is unset. An explicit caller value for either wins.
+if [ -z "${TRIVY_DB_REPOSITORY:-}" ]; then
+  if [ -n "${HARBOR_REGISTRY:-}" ]; then
+    TRIVY_DB_REPOSITORY="${HARBOR_REGISTRY%/}/ghcr/aquasecurity/trivy-db:2"
+  else
+    TRIVY_DB_REPOSITORY=public.ecr.aws/aquasecurity/trivy-db:2
+  fi
+fi
+if [ -z "${TRIVY_JAVA_DB_REPOSITORY:-}" ] && [ -n "${HARBOR_REGISTRY:-}" ]; then
+  TRIVY_JAVA_DB_REPOSITORY="${HARBOR_REGISTRY%/}/ghcr/aquasecurity/trivy-java-db:1"
+fi
 
 TRIVY_PARAMS=()
 TRIVY_PACKAGE_TYPES="${TRIVY_PKG_TYPES:-${TRIVY_VULN_TYPE}}"
@@ -35,6 +50,10 @@ fi
 if [ -n "${TRIVY_DB_REPOSITORY}" ]; then
     TRIVY_PARAMS+=(--db-repository)
     TRIVY_PARAMS+=("${TRIVY_DB_REPOSITORY}")
+fi
+if [ -n "${TRIVY_JAVA_DB_REPOSITORY:-}" ]; then
+    TRIVY_PARAMS+=(--java-db-repository)
+    TRIVY_PARAMS+=("${TRIVY_JAVA_DB_REPOSITORY}")
 fi
 
 unset TRIVY_VULN_TYPE

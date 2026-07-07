@@ -16,6 +16,11 @@ variables:
   MULTIARCH: 1
   TAG: dind
   SKIP_TRIVY: 1
+  # Bake the published tag into the image banner: main's build script harvests
+  # ARG_* env vars into build-args, so this reaches the Dockerfile's BUILDER_TAG
+  # (-> /usr/local/etc/.builder-tag, read by share/build-functions.sh). dind's
+  # analog of main's self-build wrapper, which the buildkit toolchain doesn't run.
+  ARG_BUILDER_TAG: dind
 
 # main's template gates jobs to the default branch; re-open the build job for
 # this maintenance branch and its scheduled rebuilds (apk upgrade -> CVE patches).

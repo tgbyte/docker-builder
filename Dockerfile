@@ -4,6 +4,7 @@ FROM docker:${DOCKER_VERSION:-latest}
 
 ARG GIT_COMMIT
 ARG GIT_COMMIT_DATE
+ARG BUILDER_TAG
 
 ENV LANG=C.UTF-8
 RUN set -x \
@@ -36,4 +37,5 @@ COPY share/* /usr/local/share/
 RUN set -x \
     && mkdir -p /usr/local/etc \
     && echo $GIT_COMMIT > /usr/local/etc/.builder-commit \
-    && echo $GIT_COMMIT_DATE > /usr/local/etc/.builder-commit-date
+    && echo $GIT_COMMIT_DATE > /usr/local/etc/.builder-commit-date \
+    && echo $BUILDER_TAG > /usr/local/etc/.builder-tag

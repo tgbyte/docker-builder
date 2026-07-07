@@ -3,7 +3,7 @@
 [[ "${_BUILD_FUNCTIONS:-""}" == "yes" ]] && return 0
 _BUILD_FUNCTIONS=yes
 
-echo "tgbyte/builder - Git commit $(cat /usr/local/etc/.builder-commit) @ $(cat /usr/local/etc/.builder-commit-date)"
+echo "tgbyte/builder:$(cat /usr/local/etc/.builder-tag 2>/dev/null) - Git commit $(cat /usr/local/etc/.builder-commit) @ $(cat /usr/local/etc/.builder-commit-date)"
 
 function docker_login {
   if [ ! -e .docker-logged-in ]; then
@@ -160,10 +160,16 @@ FULL_IMAGE="$IMAGE":"$TAG"
 # shellcheck disable=SC2034
 HELM_CHART_IMAGE="oci://${IMAGE}/helm"
 
-# shellcheck disable=SC2034
-ARG_GIT_COMMIT=$(git rev-parse --short HEAD)
-# shellcheck disable=SC2034
-ARG_GIT_COMMIT_DATE=$(git show -s --format=%cd)
+# Populate the builder-image banner (baked into .builder-commit* via the
+# Dockerfile GIT_COMMIT/GIT_COMMIT_DATE args). These MUST be exported: the
+# ARG_* -> build-arg harvester below reads `env -0`, which only lists exported
+# variables, so a plain assignment here silently yields empty build args.
+# Prefer GitLab's predefined vars (always set in CI and immune to the git
+# "dubious ownership" issues rootless builds can hit); fall back to git for
+# local builds. `|| true` so a missing git repo degrades the banner instead of
+# aborting the build.
+export ARG_GIT_COMMIT="${CI_COMMIT_SHORT_SHA:-$(git rev-parse --short HEAD 2>/dev/null || true)}"
+export ARG_GIT_COMMIT_DATE="${CI_COMMIT_TIMESTAMP:-$(git show -s --format=%cd 2>/dev/null || true)}"
 
 declare -a BUILD_ARGS
 while IFS='=' read -r -d '' n v; do

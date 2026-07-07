@@ -8,3 +8,9 @@ variables:
   TRIVY_SCRIPT: bin/trivy.sh
   TRIVY_SEVERITY: CRITICAL
   SKIP_TRIVY: 1
+  # The builder is published as a rolling ':latest'; version.sh only yields the
+  # baked-in BuildKit version (e.g. 0.31.1), not the publish tag. Pin TAG here so
+  # every job agrees: without it build-functions.sh defaults TAG to $VERSION, and
+  # the pre-build trivy scan job (which has no TAG override, unlike the build
+  # wrapper) would scan the never-published tgbyte/builder:$VERSION and fail.
+  TAG: latest

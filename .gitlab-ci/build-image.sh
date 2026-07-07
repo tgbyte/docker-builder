@@ -12,10 +12,6 @@ source /usr/local/share/build-functions.sh
 
 exit_if_image_present
 
-export ARG_BUILDKIT_VERSION="${VERSION}"
-# Bake the published tag into the image banner (Dockerfile writes .builder-tag,
-# read by build-functions.sh). TAG is pinned to `latest` in .gitlab-ci.yml so all
-# jobs agree; mirror it into the banner arg here.
 export ARG_BUILDER_TAG="${TAG}"
 
 "${DIR}"/../bin/build-image.sh

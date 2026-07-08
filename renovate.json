@@ -3,6 +3,7 @@
   "extends": ["config:recommended"],
   "automerge": true,
   "automergeType": "branch",
+  "ignoreTests": true,
   "customManagers": [
     {
       "customType": "regex",

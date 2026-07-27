@@ -196,7 +196,7 @@ while IFS='=' read -r -d '' n v; do
     BUILD_OPTS+=("build-arg:$n=$v")
 done < <(env -0 | grep -z '^ARG_' | sed -rze 's/^ARG_//')
 
-if [ ! -e .trivy-run ]; then
+if [ ! -e .trivy-run ] && [ "${SKIP_TRIVY}" != "1" ]; then
   build_log "Trivy did not run - forcing build"
   # shellcheck disable=SC2034
   FORCE="1"

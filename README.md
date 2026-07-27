@@ -44,7 +44,7 @@ The template (`templates/.gitlab-ci.yml`) defines:
 
 | Stage | Job | What it does |
 |-------|-----|--------------|
-| `scan` | `trivy` | Pre-build scan of the currently published image to decide whether a rebuild must be forced. Runs on the default branch for non-`push` pipelines (e.g. scheduled security re-scans); `allow_failure: true`. |
+| `scan` | `trivy` | Pre-build scan of the currently published image to decide whether a rebuild must be forced. Runs on the default branch for non-`push` pipelines (e.g. scheduled security re-scans); `allow_failure: true`. Skipped when `SKIP_TRIVY=1`. |
 | `build` | `build` | Builds and pushes the image. Skipped when the tag already exists and isn't flagged vulnerable or forced. |
 | `verify` | `trivy-result` | Re-scans the freshly published image and writes `.trivy-report.json`. Skipped when `SKIP_TRIVY=1`. |
 
@@ -62,7 +62,7 @@ All variables are optional unless noted.
 | `BUILD_DIR` | `.` | Build context |
 | `SKIP_DOCKER_PUSH` | unset | Build only, don't push |
 | `FORCE` | unset | Build even if the tag already exists |
-| `SKIP_TRIVY` | unset | `1` → skip the post-build verify scan |
+| `SKIP_TRIVY` | unset | `1` → skip both Trivy jobs (pre-build scan and post-build verify scan); the missing pre-build scan then does not force a rebuild |
 | `TRIVY_SEVERITY` | `HIGH,CRITICAL,MEDIUM` | Severities that fail the scan |
 | `HARBOR_REGISTRY` | unset | Route pulls through a Harbor proxy cache |
 | `DOCKER_HUB_USER` / `DOCKER_HUB_PASSWORD` | — | Docker Hub auth (non-GitLab registries) |

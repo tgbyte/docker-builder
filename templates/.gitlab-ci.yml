@@ -21,7 +21,7 @@ trivy:
       - .version
     when: always
   rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "push"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "push" && $SKIP_TRIVY != "1"
 
 build:
   stage: build

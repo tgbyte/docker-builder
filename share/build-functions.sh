@@ -70,13 +70,35 @@ function registry_auth_docker_hub {
 }
 
 function exit_if_image_present {
-  if [ "$FORCE" != "1" ] && [ -z "$VULNERABLE" ]; then
-    echo "Checking if ${FULL_IMAGE} already exists..."
-    if check-tag.sh "${FULL_IMAGE}"; then
-      echo "Docker image ${FULL_IMAGE} already exists - skipping build"
-      exit 0
-    fi
+  if [ "$FORCE" == "1" ] || [ -n "$VULNERABLE" ]; then
+    return 0
   fi
+
+  echo "Checking if ${FULL_IMAGE} already exists..."
+  registry_auth
+  local manifest
+  if ! manifest=$(skopeo inspect "docker://${FULL_IMAGE}" 2>/dev/null); then
+    return 0
+  fi
+
+  # Version tags are immutable: existence alone means this version is
+  # published. Without a current commit to compare against (local build
+  # outside git), fall back to the same existence-only semantics.
+  if [ -n "$VERSION" ] || [ -z "$ARG_GIT_COMMIT" ]; then
+    echo "Docker image ${FULL_IMAGE} already exists - skipping build"
+    exit 0
+  fi
+
+  # Mutable tags (latest / branch names) always exist after the first push,
+  # so compare the published image's revision label against the current
+  # commit instead. Images from before the label was introduced rebuild once.
+  local existing_commit
+  existing_commit=$(jq -r '.Labels["org.opencontainers.image.revision"] // empty' <<< "$manifest")
+  if [ "$existing_commit" == "$ARG_GIT_COMMIT" ]; then
+    echo "Docker image ${FULL_IMAGE} already built from commit ${existing_commit} - skipping build"
+    exit 0
+  fi
+  echo "Docker image ${FULL_IMAGE} exists but was built from commit '${existing_commit:-unknown}' (current: ${ARG_GIT_COMMIT}) - rebuilding"
 }
 
 function build_log {
@@ -195,6 +217,13 @@ while IFS='=' read -r -d '' n v; do
     BUILD_OPTS+=("--opt")
     BUILD_OPTS+=("build-arg:$n=$v")
 done < <(env -0 | grep -z '^ARG_' | sed -rze 's/^ARG_//')
+
+# Stamp the source commit as an OCI label via the dockerfile frontend (works
+# without the Dockerfile declaring anything); exit_if_image_present compares
+# it to decide whether a mutable tag is already up to date.
+if [ -n "$ARG_GIT_COMMIT" ]; then
+  BUILD_OPTS+=("--opt" "label:org.opencontainers.image.revision=${ARG_GIT_COMMIT}")
+fi
 
 if [ ! -e .trivy-run ] && [ "${SKIP_TRIVY}" != "1" ]; then
   build_log "Trivy did not run - forcing build"

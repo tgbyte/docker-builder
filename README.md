@@ -10,7 +10,7 @@ images — and optionally your Helm charts — from a single `include:`.
 - **Rootless builds** — BuildKit via `buildctl-daemonless.sh`; no Docker daemon, no `--privileged`.
 - **Single multi-arch build** — `MULTIARCH=1` produces a `linux/amd64,linux/arm64` manifest list in one build+push, with no per-arch jobs to stitch together.
 - **Built-in vulnerability scanning** — Trivy scans the image; the pipeline can report or gate on findings.
-- **Skip-if-unchanged** — a build is skipped when its tag already exists in the registry and isn't flagged vulnerable.
+- **Skip-if-unchanged** — a build is skipped when its tag is already up to date in the registry and isn't flagged vulnerable. Version tags skip on existence alone (they're immutable); mutable tags (`latest`, branch names) skip only when the published image's `org.opencontainers.image.revision` label matches the current commit.
 - **Helm charts** — packages and pushes an OCI Helm chart when a `charts/<name>` directory is present.
 - **Harbor proxy-cache aware** — optionally routes base-image and Trivy-DB pulls through a Harbor proxy cache to avoid upstream rate limits.
 - **Batteries included** — `git`, `helm`, `skopeo`, `trivy`, `jq`, `node`/`npm`, `python3`/`pip`, `make`, `httpie`, and more.
@@ -45,7 +45,7 @@ The template (`templates/.gitlab-ci.yml`) defines:
 | Stage | Job | What it does |
 |-------|-----|--------------|
 | `scan` | `trivy` | Pre-build scan of the currently published image to decide whether a rebuild must be forced. Runs on the default branch for non-`push` pipelines (e.g. scheduled security re-scans); `allow_failure: true`. Skipped when `SKIP_TRIVY=1`. |
-| `build` | `build` | Builds and pushes the image. Skipped when the tag already exists and isn't flagged vulnerable or forced. |
+| `build` | `build` | Builds and pushes the image. Skipped when the tag is already up to date (see skip-if-unchanged above) and isn't flagged vulnerable or forced. |
 | `verify` | `trivy-result` | Re-scans the freshly published image and writes `.trivy-report.json`. Skipped when `SKIP_TRIVY=1`. |
 
 ## Configuration
@@ -61,7 +61,7 @@ All variables are optional unless noted.
 | `DOCKERFILE` | `<BUILD_DIR>/Dockerfile` | Dockerfile path |
 | `BUILD_DIR` | `.` | Build context |
 | `SKIP_DOCKER_PUSH` | unset | Build only, don't push |
-| `FORCE` | unset | Build even if the tag already exists |
+| `FORCE` | unset | Build even if the tag is already up to date |
 | `SKIP_TRIVY` | unset | `1` → skip both Trivy jobs (pre-build scan and post-build verify scan); the missing pre-build scan then does not force a rebuild |
 | `TRIVY_SEVERITY` | `HIGH,CRITICAL,MEDIUM` | Severities that fail the scan |
 | `HARBOR_REGISTRY` | unset | Route pulls through a Harbor proxy cache |

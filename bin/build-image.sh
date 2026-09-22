@@ -28,6 +28,7 @@ buildctl-daemonless.sh build \
   "${BUILD_OPTS[@]}" \
   --output "${OUTPUT}" \
   --metadata-file results/metadata.json
+write_build_skipped_report 0
 
 if [ -n "${SKIP_DOCKER_PUSH}" ]; then
   echo "SKIP_DOCKER_PUSH set - image built but not pushed."

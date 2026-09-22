@@ -36,6 +36,11 @@ build:
       - results/
       - '**/results/'
       - .version
+    # BUILD_SKIPPED=1 when the published image was already up to date and no
+    # build ran (results/metadata.json is absent then); 0 after a real build.
+    # Jobs that `needs:` this one with artifacts: true get it as a variable.
+    reports:
+      dotenv: results/build.env
   needs:
     - job: trivy
       optional: true

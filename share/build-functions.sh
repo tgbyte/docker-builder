@@ -86,6 +86,7 @@ function exit_if_image_present {
   # outside git), fall back to the same existence-only semantics.
   if [ -n "$VERSION" ] || [ -z "$ARG_GIT_COMMIT" ]; then
     echo "Docker image ${FULL_IMAGE} already exists - skipping build"
+    write_existing_image_metadata "$manifest"
     exit 0
   fi
 
@@ -96,9 +97,33 @@ function exit_if_image_present {
   existing_commit=$(jq -r '.Labels["org.opencontainers.image.revision"] // empty' <<< "$manifest")
   if [ "$existing_commit" == "$ARG_GIT_COMMIT" ]; then
     echo "Docker image ${FULL_IMAGE} already built from commit ${existing_commit} - skipping build"
+    write_existing_image_metadata "$manifest"
     exit 0
   fi
   echo "Docker image ${FULL_IMAGE} exists but was built from commit '${existing_commit:-unknown}' (current: ${ARG_GIT_COMMIT}) - rebuilding"
+}
+
+# write_existing_image_metadata <skopeo-inspect-json>
+#
+# A skipped build still has to leave results/metadata.json behind: downstream
+# jobs (infra/ci-k8s-deployment's bump-image-tag) read the pushed digest from
+# that artifact and fail when it is missing, which is what every scheduled
+# pipeline did once the image was already current. Write the same two keys
+# buildkit's --metadata-file emits, describing the image that IS published for
+# this tag. skopeo's .Digest is the digest of the manifest the tag resolves to
+# (the index for a multi-arch image), i.e. the same value buildkit reports as
+# containerimage.digest after a push.
+function write_existing_image_metadata {
+  local digest
+  digest=$(jq -r '.Digest // empty' <<< "$1")
+  if [ -z "$digest" ]; then
+    echo "WARNING: could not read the digest of ${FULL_IMAGE} - not writing results/metadata.json"
+    return 0
+  fi
+  mkdir -p results
+  jq -n --arg name "${FULL_IMAGE}" --arg digest "$digest" \
+    '{"image.name": $name, "containerimage.digest": $digest}' > results/metadata.json
+  echo "Wrote results/metadata.json for the existing image ${FULL_IMAGE}@${digest}"
 }
 
 function build_log {

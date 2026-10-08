@@ -1,4 +1,4 @@
-ARG BUILDKIT_VERSION=0.33.1
+ARG BUILDKIT_VERSION=0.34.0
 
 # renovate: datasource=docker depName=moby/buildkit versioning=docker
 FROM moby/buildkit:v${BUILDKIT_VERSION}-rootless

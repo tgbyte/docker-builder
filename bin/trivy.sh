@@ -10,11 +10,18 @@ echo "Scanning ${FULL_IMAGE} for vulnerabilities..."
 set +e
 
 # Vulnerability + Java DB sources. Route through the Harbor proxy-cache when
-# configured — reuses the `ghcr` proxy-cache project (both DBs' canonical
-# upstream is ghcr.io/aquasecurity), so Harbor caches them once and every scan
-# pulls locally, dodging ghcr.io's trivy-db pull rate limits. Falls back to the
-# public ECR mirror for the vuln DB (and trivy's ghcr.io default for the Java
-# DB) when Harbor is unset. An explicit caller value for either wins.
+# configured, so Harbor caches them once and every scan pulls locally, dodging
+# ghcr.io's trivy-db pull rate limits. Falls back to the public ECR mirror for
+# the vuln DB (and trivy's own default for the Java DB) when Harbor is unset.
+# An explicit caller value for either wins.
+#
+# The Java DB comes from Docker Hub (aquasec/trivy-java-db, the same blob as
+# ghcr.io/aquasecurity/trivy-java-db), not from ghcr: ghcr serves blobs through
+# signed CDN URLs valid for 5-10 minutes and cuts the transfer ~45 s after they
+# expire, and from fsn it delivers ~1.2 MB/s -- too slow for the ~1 GB Java DB
+# to finish, so Harbor never cached it and every scan failed with "error
+# verifying size". Docker Hub delivers the same blob at ~100 MB/s. Measured
+# 2026-10-28.
 if [ -z "${TRIVY_DB_REPOSITORY:-}" ]; then
   if [ -n "${HARBOR_REGISTRY:-}" ]; then
     TRIVY_DB_REPOSITORY="${HARBOR_REGISTRY%/}/ghcr/aquasecurity/trivy-db:2"
@@ -23,7 +30,7 @@ if [ -z "${TRIVY_DB_REPOSITORY:-}" ]; then
   fi
 fi
 if [ -z "${TRIVY_JAVA_DB_REPOSITORY:-}" ] && [ -n "${HARBOR_REGISTRY:-}" ]; then
-  TRIVY_JAVA_DB_REPOSITORY="${HARBOR_REGISTRY%/}/ghcr/aquasecurity/trivy-java-db:1"
+  TRIVY_JAVA_DB_REPOSITORY="${HARBOR_REGISTRY%/}/dockerhub/aquasec/trivy-java-db:1"
 fi
 
 TRIVY_PARAMS=()

@@ -118,6 +118,37 @@ function write_build_skipped_report {
   echo "BUILD_SKIPPED=$1" > results/build.env
 }
 
+# sign_image <image@digest>
+#
+# Signs a pushed image with cosign when COSIGN_PRIVATE_KEY is set, and does
+# nothing otherwise. COSIGN_PRIVATE_KEY is a File-type CI variable (the PEM is
+# multi-line, so GitLab cannot mask it; COSIGN_PASSWORD, which cosign reads
+# from the environment, is the masked half). Both are protected instance-level
+# variables, so only pipelines on protected refs can sign.
+#
+# The signature is the legacy `sha256-<digest>.sig` tag next to the image, and
+# nothing is uploaded to the public Rekor log: these are private images, and the
+# log would publish their digests. Kyverno on k8s-fsn verifies it against the
+# public key in k8s-config platform/kyverno/policies/verify-tgbyte-images.yaml.
+#
+# Only the index digest is signed, not each platform manifest: that is what a
+# pod's image reference resolves to, and so what Kyverno looks up.
+function sign_image {
+  if [ -z "${COSIGN_PRIVATE_KEY:-}" ]; then
+    echo "COSIGN_PRIVATE_KEY not set - not signing $1"
+    return 0
+  fi
+  echo "Signing $1..."
+  cosign sign --yes \
+    --key "${COSIGN_PRIVATE_KEY}" \
+    --use-signing-config=false \
+    --tlog-upload=false \
+    --new-bundle-format=false \
+    -a "commit=${CI_COMMIT_SHA:-unknown}" \
+    -a "pipeline=${CI_PIPELINE_URL:-local}" \
+    "$1"
+}
+
 function build_log {
   if [ "$VERBOSE" == "1" ]; then
     echo "$1"

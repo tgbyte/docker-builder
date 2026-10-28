@@ -36,3 +36,4 @@
 ## Security & Configuration Tips
 - Registry credentials are expected via env vars (`DOCKER_HUB_USER`, `CI_REGISTRY_USER`, etc.); do not hardcode secrets.
 - Builds run rootless (no `--privileged`); registry auth is written to `config.json` by `registry_auth`.
+- Image signing: `build-image.sh` signs every pushed image by digest with cosign (`sign_image`) when the instance-level CI variables `COSIGN_PRIVATE_KEY` (File, protected) and `COSIGN_PASSWORD` (masked, protected) are present; without them it skips. Kyverno on k8s-fsn verifies against the matching public key.

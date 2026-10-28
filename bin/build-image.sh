@@ -35,6 +35,7 @@ if [ -n "${SKIP_DOCKER_PUSH}" ]; then
 else
   DIGEST=$(jq -r '."containerimage.digest" // empty' results/metadata.json)
   echo "Pushed ${FULL_IMAGE}@${DIGEST}"
+  sign_image "${IMAGE}@${DIGEST}"
 fi
 
 if [ -n "$BUILD_HELM_CHART" ]; then

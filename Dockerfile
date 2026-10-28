@@ -1,5 +1,10 @@
 ARG BUILDKIT_VERSION=0.34.1
 
+# cosign signs the pushed image (sign_image in share/build-functions.sh). Copied
+# from the upstream image rather than taken from Alpine so the version is pinned
+# and Renovate bumps it like any other base image.
+FROM ghcr.io/sigstore/cosign/cosign:v3.1.4 AS cosign
+
 # renovate: datasource=docker depName=moby/buildkit versioning=docker
 FROM moby/buildkit:v${BUILDKIT_VERSION}-rootless
 
@@ -37,6 +42,7 @@ RUN set -x \
     && apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/testing \
          trivy
 
+COPY --from=cosign /ko-app/cosign /usr/local/bin/cosign
 COPY bin/* /usr/local/bin/
 COPY share/* /usr/local/share/
 

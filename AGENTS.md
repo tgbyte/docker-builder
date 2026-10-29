@@ -37,3 +37,4 @@
 - Registry credentials are expected via env vars (`DOCKER_HUB_USER`, `CI_REGISTRY_USER`, etc.); do not hardcode secrets.
 - Builds run rootless (no `--privileged`); registry auth is written to `config.json` by `registry_auth`.
 - Image signing: `build-image.sh` signs every pushed image by digest with cosign (`sign_image`) when the instance-level CI variables `COSIGN_PRIVATE_KEY` (File, protected) and `COSIGN_PASSWORD` (masked, protected) are present; without them it skips. Kyverno on k8s-fsn verifies against the matching public key.
+- Images built outside `build-image.sh` (e.g. Jib) are signed by extending `.sign-image` from `templates/sign-image.yml`: it reads the pushed repository and digest from a build record (`SIGN_IMAGE_FILE`, Jib's `jib-image.json` format) and calls the same `sign_image`. Unlike `build-image.sh` it fails without the key, so a deploy job that needs it never rolls out an unsigned image.

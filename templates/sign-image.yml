@@ -1,0 +1,44 @@
+# Signs an image that was built outside build-image.sh -- by Jib, for example --
+# with the same cosign key, flags and protected-ref rule as build-image.sh
+# (sign_image in share/build-functions.sh). Include this file and extend the
+# job; it adds no stage and no needs of its own:
+#
+#   include:
+#     - project: 'docker/builder'
+#       file: '/templates/sign-image.yml'
+#
+#   sign-image:
+#     extends: .sign-image
+#     stage: docker
+#     needs:
+#       - job: docker-image
+#         artifacts: true
+#     variables:
+#       SIGN_IMAGE_FILE: service/target/jib-image.json
+#
+# SIGN_IMAGE_FILE is a build record carrying the pushed repository in `image`
+# and its digest in `imageDigest`, which is what Jib writes to
+# target/jib-image.json. The digest is signed, never a tag.
+#
+# Make the deploy job need this one, so only a signed image is rolled out.
+.sign-image:
+  tags: [rootless]
+  # No image: the rootless runners' default is tgbyte/builder, which has
+  # cosign and build-functions.sh.
+  variables:
+    SIGN_IMAGE_FILE: target/jib-image.json
+    QUIET: "1"
+  script:
+    - REF="$(jq -er '(.image | sub(":[^:/]+$"; "")) + "@" + .imageDigest' "$SIGN_IMAGE_FILE")"
+    - source /usr/local/share/build-functions.sh
+    - registry_auth
+    - |
+      if [ -z "${COSIGN_PRIVATE_KEY:-}" ]; then
+        # sign_image would skip with a notice; fail instead, so a deploy job
+        # that needs this one cannot roll out an unsigned image unnoticed.
+        echo "COSIGN_PRIVATE_KEY not set (is ${CI_COMMIT_REF_NAME} a protected ref?) - refusing to continue unsigned" >&2
+        exit 1
+      fi
+    - sign_image "$REF"
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH

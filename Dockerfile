@@ -1,4 +1,4 @@
-ARG BUILDKIT_VERSION=0.34.1
+ARG BUILDKIT_VERSION=0.34.2
 
 # cosign signs the pushed image (sign_image in share/build-functions.sh). Copied
 # from the upstream image rather than taken from Alpine so the version is pinned

@@ -3,7 +3,7 @@ ARG BUILDKIT_VERSION=0.35.1
 # cosign signs the pushed image (sign_image in share/build-functions.sh). Copied
 # from the upstream image rather than taken from Alpine so the version is pinned
 # and Renovate bumps it like any other base image.
-FROM ghcr.io/sigstore/cosign/cosign:v3.1.5 AS cosign
+FROM ghcr.io/sigstore/cosign/cosign:v3.1.6 AS cosign
 
 # renovate: datasource=docker depName=moby/buildkit versioning=docker
 FROM moby/buildkit:v${BUILDKIT_VERSION}-rootless
